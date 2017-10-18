@@ -20,6 +20,8 @@
 #define AK_RET_OK						(0x00)
 #define AK_RET_NG						(0x01)
 
+#define AK_USER_DEFINE_SIG				(10)
+
 #define TASK_PRI_MAX_SIZE				(8)
 
 #define TASK_PRI_LEVEL_1				(1)
