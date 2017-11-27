@@ -11,6 +11,7 @@
 #include "if_rf433.h"
 #include "if_app.h"
 #include "if_cpu_serial.h"
+#include "if_usb_stick_rf24.h"
 
 #include "task_console.h"
 #include "task_snmp.h"
@@ -46,6 +47,7 @@ enum {
 	GW_TASK_SYS_ID,
 	GW_TASK_PUB_SUB_ID,
 	GW_TASK_FW_ID,
+	GW_TASK_IF_USB_STICK_RF24_ID,
 
 	/* EOT task ID */
 	AK_TASK_LIST_LEN,

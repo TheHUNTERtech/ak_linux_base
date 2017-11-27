@@ -7,6 +7,8 @@
 
 #include "firmware.h"
 
+ssize_t ssize;
+
 int firmware_get_info(firmware_header_t* fh, const char* bin_file_path) {
 	int index;
 	uint32_t temp_data;
@@ -23,7 +25,7 @@ int firmware_get_info(firmware_header_t* fh, const char* bin_file_path) {
 
 	for (index = 0; index < file_info.st_size; index += sizeof(uint32_t)) {
 		temp_data = 0;
-		pread(binary_file, &temp_data, sizeof(uint32_t), index);
+		ssize = pread(binary_file, &temp_data, sizeof(uint32_t), index);
 		check_sum += temp_data;
 	}
 
@@ -51,7 +53,7 @@ int firmware_read(uint8_t* data, uint32_t cursor, uint32_t size, const char* bin
 		return -1;
 	}
 
-	pread(binary_file, data, size, cursor);
+	ssize = pread(binary_file, data, size, cursor);
 
 	close(binary_file);
 

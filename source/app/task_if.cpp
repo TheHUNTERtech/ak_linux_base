@@ -34,6 +34,10 @@ static void app_if_forward_msg(ak_msg_t* msg);
 static void cpu_serial_if_forward_msg(ak_msg_t* msg);
 #endif
 
+#if (IF_USB_RF24_ENABLE == 1)
+static void usb_stick_rf24_if_forward_msg(ak_msg_t* msg);
+#endif
+
 void* gw_task_if_entry(void*) {
 	task_mask_started();
 	wait_all_tasks_started();
@@ -46,9 +50,14 @@ void* gw_task_if_entry(void*) {
 			ak_msg_t* msg = rev_msg(GW_TASK_IF_ID);
 
 			/* handler message */
-			if (msg->header->if_des_type == IF_TYPE_RF24_GW) {
+			if (msg->header->if_des_type == IF_TYPE_RF24_GW ||
+					msg->header->if_des_type == IF_TYPE_RF24_AC) {
 #if (IF_RF24_ENABLE == 1)
 				rf24_if_forward_msg(msg);
+#endif
+
+#if (IF_USB_RF24_ENABLE == 1)
+				usb_stick_rf24_if_forward_msg(msg);
 #endif
 			}
 			else if (msg->header->if_des_type == IF_TYPE_APP_GMNG ||
@@ -206,6 +215,66 @@ void cpu_serial_if_forward_msg(ak_msg_t* msg) {
 		APP_DBG("GW_IF_DYNAMIC_MSG_OUT\n");
 		msg_inc_ref_count(msg);
 		task_post(GW_TASK_IF_CPU_SERIAL_ID, msg);
+	}
+		break;
+
+	default:
+		break;
+	}
+}
+#endif
+
+#if (IF_USB_RF24_ENABLE == 1)
+void usb_stick_rf24_if_forward_msg(ak_msg_t* msg) {
+	switch (msg->header->sig) {
+	case GW_IF_PURE_MSG_IN:	{
+		APP_DBG("GW_IF_PURE_MSG_IN\n");
+		msg_inc_ref_count(msg);
+
+		set_msg_sig(msg, msg->header->if_sig);
+		set_msg_src_task_id(msg, msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, msg);
+	}
+		break;
+
+	case GW_IF_COMMON_MSG_IN: {
+		APP_DBG("GW_IF_COMMON_MSG_IN\n");
+		msg_inc_ref_count(msg);
+
+		set_msg_sig(msg, msg->header->if_sig);
+		set_msg_src_task_id(msg, msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, msg);
+	}
+		break;
+
+	case GW_IF_DYNAMIC_MSG_IN: {
+		APP_DBG("GW_IF_DYNAMIC_MSG_IN\n");
+		msg_inc_ref_count(msg);
+
+		set_msg_sig(msg, msg->header->if_sig);
+		set_msg_src_task_id(msg, msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, msg);
+	}
+		break;
+
+	case GW_IF_PURE_MSG_OUT: {
+		APP_DBG("GW_IF_PURE_MSG_OUT\n");
+		msg_inc_ref_count(msg);
+		task_post(GW_TASK_IF_USB_STICK_RF24_ID, msg);
+	}
+		break;
+
+	case GW_IF_COMMON_MSG_OUT: {
+		APP_DBG("GW_IF_COMMON_MSG_OUT\n");
+		msg_inc_ref_count(msg);
+		task_post(GW_TASK_IF_USB_STICK_RF24_ID, msg);
+	}
+		break;
+
+	case GW_IF_DYNAMIC_MSG_OUT: {
+		APP_DBG("GW_IF_DYNAMIC_MSG_OUT\n");
+		msg_inc_ref_count(msg);
+		task_post(GW_TASK_IF_USB_STICK_RF24_ID, msg);
 	}
 		break;
 

@@ -45,7 +45,7 @@ int main() {
 
 		/* create task */
 		pthread_create(&(task_list[index].pthread), NULL, task_list[index].task, NULL);
-		printf("ID:%08x\tCREATE: %s\n",(unsigned int)task_list[index].pthread, task_list[index].info);
+		AK_PRINT("ID:%08x\tCREATE: %s\n",(unsigned int)task_list[index].pthread, task_list[index].info);
 
 		/* create queue trigger */
 		pthread_cond_init(&task_list[index].mailbox_cond, NULL);
@@ -129,7 +129,7 @@ ak_msg_t* get_dynamic_msg() {
 	g_msg->header->len = 0;
 	g_msg->header->payload = NULL;
 
-	AK_MSG_DBG("[MSG] get msg:%08x\theader:%08x\n", g_msg, g_msg->header);
+	AK_MSG_DBG("[MSG] get msg:%p\theader:%p\n", g_msg, g_msg->header);
 
 	return g_msg;
 }
@@ -155,7 +155,7 @@ ak_msg_t* get_common_msg() {
 	g_msg->header->len = 0;
 	g_msg->header->payload = NULL;
 
-	AK_MSG_DBG("[MSG] get msg:%08x\theader:%08x\n", g_msg, g_msg->header);
+	AK_MSG_DBG("[MSG] get msg:%p\theader:%p\n", g_msg, g_msg->header);
 
 	return g_msg;
 }
@@ -311,7 +311,7 @@ void set_data_common_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 				else {
 					msg->header->len = len;
 					memcpy(msg->header->payload, data, len);
-					AK_MSG_DBG("[MSG] set payload:%08x\n", msg->header->payload);
+					AK_MSG_DBG("[MSG] set payload:%p\n", msg->header->payload);
 					AK_MSG_DBG("[MSG] set payload len:%d\n", msg->header->len);
 				}
 			}
@@ -334,7 +334,7 @@ void get_data_common_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 			}
 			else {
 				memcpy(data, msg->header->payload, len);
-				AK_MSG_DBG("[MSG] get payload:%08x\n", msg->header->payload);
+				AK_MSG_DBG("[MSG] get payload:%p\n", msg->header->payload);
 			}
 		}
 		else {
@@ -372,7 +372,7 @@ void set_data_dynamic_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 			else {
 				msg->header->len = len;
 				memcpy(msg->header->payload, data, len);
-				AK_MSG_DBG("[MSG] set payload:%08x\n", msg->header->payload);
+				AK_MSG_DBG("[MSG] set payload:%p\n", msg->header->payload);
 				AK_MSG_DBG("[MSG] set payload len:%d\n", msg->header->len);
 			}
 		}
@@ -394,7 +394,7 @@ void get_data_dynamic_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 			}
 			else {
 				memcpy(data, msg->header->payload, len);
-				AK_MSG_DBG("[MSG] get payload:%08x\n", msg->header->payload);
+				AK_MSG_DBG("[MSG] get payload:%p\n", msg->header->payload);
 			}
 		}
 		else {
@@ -471,7 +471,10 @@ void msg_inc_ref_count(ak_msg_t* msg) {
 }
 
 void msg_dec_ref_count(ak_msg_t* msg) {
-	if (msg->header->ref_count -- < 0) {
+	if (msg->header->ref_count > 0) {
+		msg->header->ref_count--;
+	}
+	else {
 		FATAL("AK", 0x1F);
 	}
 }

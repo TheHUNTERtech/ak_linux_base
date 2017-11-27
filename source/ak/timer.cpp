@@ -67,6 +67,7 @@ void timer_handler(int sig, siginfo_t *si, void *uc) {
 
 	(void)si;
 	(void)uc;
+	(void)sig;
 
 	pthread_mutex_lock(&mt_timer_service);
 
@@ -130,8 +131,6 @@ void* timer_entry(void*) {
 
 	task_mask_started();
 	wait_all_tasks_started();
-
-	SYS_DBG("des_task_id:timer_entry\n");
 
 	while(1) {
 		sleep(100000);

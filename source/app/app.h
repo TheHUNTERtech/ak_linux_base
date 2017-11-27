@@ -64,8 +64,7 @@ enum {
  */
 /*****************************************************************************/
 /* define timer */
-#define GW_TIMER_FIRMWARE_TRANFER_PACKET_PENDING_INTERVAL	(10)		/* 10ms */
-#define GW_TIMER_FIRMWARE_PACKED_TIMEOUT_INTERVAL			(1000)		/* 1s */
+#define GW_TIMER_FIRMWARE_PACKED_TIMEOUT_INTERVAL			(300)		/* 300ms */
 #define GW_TIMER_FIRMWARE_GET_FIRMWARE_INFO_TIMEOUT			(2000)		/* 2s */
 #define GW_TIMER_FIRMWARE_DEV_INTERNAL_UPDATE_TIMEOUT		(180000)	/* 3' */
 
@@ -88,6 +87,16 @@ enum {
 };
 
 /*****************************************************************************/
+/*  task RF24_NETWORK_MNG define
+ */
+/*****************************************************************************/
+/* define timer */
+/* define signal */
+enum {
+	GW_RF24_NWK_MNG_PING = AK_USER_DEFINE_SIG,
+};
+
+/*****************************************************************************/
 /*  global define variable
  */
 /*****************************************************************************/
@@ -101,6 +110,5 @@ enum {
 #define APP_ROOT_PATH_RAM							"/run/fpt_gateway"
 
 extern app_config gateway_configure;
-extern app_config_parameter_t gateway_configure_parameter;
 
 #endif // __APP_H__

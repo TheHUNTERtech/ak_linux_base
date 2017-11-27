@@ -5,10 +5,12 @@
 RPI_SYS_DIR	=
 TOOLS_DIR	=
 NAME_MODULE	= ak_linux_base
-OPTIMIZE	= -g -Os
 CXX		= g++
 CC		= gcc
 OBJ_DIR		= build_$(NAME_MODULE)
+
+OPTIMIZE_OPTION	=	-g -Os
+WARNNING_OPTION	+=	-Werror -W -Wno-missing-field-initializers
 
 -include source/ak/Makefile.mk
 -include source/sys/Makefile.mk
@@ -20,7 +22,8 @@ CXXFLAGS	+= -I/usr/local/include
 CXXFLAGS	+= -I/usr/include
 
 # CXX compiler option
-CXXFLAGS	+=	$(OPTIMIZE)	\
+CXXFLAGS	+=	$(OPTIMIZE_OPTION)	\
+		$(WARNNING_OPTION)	\
 		-std=c++11		\
 		-Wall			\
 		-Winline		\
@@ -36,9 +39,6 @@ LDFLAGS	+= -Wl,-Map=$(OBJ_DIR)/$(NAME_MODULE).map
 LDLIBS	+=	-lpthread		\
 		-lrt			\
 		-lm			\
-		-lmosquittopp		\
-		-lmosquitto		\
-		-lcurl			\
 
 all: create $(OBJ_DIR)/$(NAME_MODULE)
 
@@ -74,4 +74,3 @@ install:
 clean:
 	@echo rm -rf $(OBJ_DIR)
 	@rm -rf $(OBJ_DIR)
-

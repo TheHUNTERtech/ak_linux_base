@@ -7,10 +7,7 @@
 #include "app.h"
 #include "app_data.h"
 
-#include "../common/json.hpp"
-
 using namespace std;
-using json = nlohmann::json;
 
 class app_config {
 public:
@@ -18,8 +15,8 @@ public:
 	void initializer(char*);
 	void set_config_path_file(char*);
 	void get_config_path_file(char*);
-	int parser_config_file(app_config_parameter_t*);
-	int write_config_data(app_config_parameter_t*);
+	int parser_config_file(void*);
+	int write_config_data(void*);
 
 private:
 	char m_config_path[256];

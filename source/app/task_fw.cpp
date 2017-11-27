@@ -44,7 +44,7 @@ string firmware_file_name;
 
 gateway_fw_dev_update_req_t gateway_fw_dev_update_req;
 
-#define GW_FW_PACKED_TIMEOUT_RETRY_COUNTER_MAX		3
+#define GW_FW_PACKED_TIMEOUT_RETRY_COUNTER_MAX		9
 
 static uint8_t gw_fw_packed_timeout_retry_counter;
 
@@ -59,8 +59,6 @@ static void fw_transfer_status(transfer_fw_status_t*);
 static void fw_checksum_err();
 static void fw_device_internal_update_started();
 static void fw_update_completed();
-
-uint32_t time_out_packet_time = 0;
 
 void* gw_task_fw_entry(void*) {
 	string firmware_binary_path = static_cast<string>(APP_ROOT_PATH_DISK) + static_cast<string>("/dev_firmware");
@@ -100,13 +98,14 @@ void* gw_task_fw_entry(void*) {
 			case GW_FW_PACKED_TIMEOUT: {
 				APP_DBG("GW_FW_PACKED_TIMEOUT\n");
 
-				time_out_packet_time++;
-
 				if (gw_fw_packed_timeout_retry_counter++ > GW_FW_PACKED_TIMEOUT_RETRY_COUNTER_MAX) {
 					as_sm_release_firmware_update();
 					fw_packed_time_out();
 				}
 				else {
+					/* resend chain firmware packet */
+					fw_bin_index -= fw_bin_packet_len;
+
 					ak_msg_t* s_msg = get_pure_msg();
 					set_msg_sig(s_msg, GW_FW_TRANFER_REQ);
 					set_msg_src_task_id(s_msg, GW_TASK_FW_ID);
@@ -117,7 +116,6 @@ void* gw_task_fw_entry(void*) {
 
 			case GW_FW_OTA_REQ: {
 				APP_DBG("GW_FW_OTA_REQ\n");
-				time_out_packet_time = 0;
 				get_data_dynamic_msg(msg, (uint8_t*)&gateway_fw_dev_update_req, sizeof(gateway_fw_dev_update_req_t));
 
 				firmware_file_name.assign((const char*)gateway_fw_dev_update_req.dev_bin_path);
@@ -129,9 +127,6 @@ void* gw_task_fw_entry(void*) {
 					fw_update_err(1);
 				}
 				else {
-					/* resend last index of firmware */
-					fw_bin_index -= fw_bin_packet_len;
-
 					ak_msg_t* s_msg = get_pure_msg();
 					set_msg_sig(s_msg, GW_FW_SM_UPDATE_RES_OK);
 
@@ -180,15 +175,14 @@ void* gw_task_fw_entry(void*) {
 
 				APP_DBG("GW_FW_CURRENT_INFO_RES\n");
 				get_data_common_msg(msg, (uint8_t*)&current_firmware_info, sizeof(firmware_header_t));
-				APP_DBG("current firmware checksum: %04X\n", current_firmware_info.checksum);
-				APP_DBG("current firmware bin_len: %d\n", current_firmware_info.bin_len);
+				APP_PRINT("current firmware checksum: %04X\n", current_firmware_info.checksum);
+				APP_PRINT("current firmware bin_len: %d\n", current_firmware_info.bin_len);
 
 				firmware_get_info(&file_firmware_info, firmware_file_name.data());
-				APP_DBG("file firmware checksum: %04X\n", file_firmware_info.checksum);
-				APP_DBG("file firmware bin_len: %d\n", file_firmware_info.bin_len);
+				APP_PRINT("file firmware checksum: %04X\n", file_firmware_info.checksum);
+				APP_PRINT("file firmware bin_len: %d\n", file_firmware_info.bin_len);
 
 				if (current_firmware_info.checksum == file_firmware_info.checksum) {
-					APP_DBG("USER_NO_NEED_TO_UPDATE\n");
 					as_sm_release_firmware_update();
 					fw_no_need_to_update(&current_firmware_info);
 				}
@@ -261,7 +255,8 @@ void* gw_task_fw_entry(void*) {
 				task_post(GW_TASK_IF_ID, s_msg);
 
 				float percent = ((float)fw_bin_index / (float)file_firmware_info.bin_len) * (float)100;
-				APP_DBG("[transfer] %d bytes %d %c\n", fw_bin_index, (uint32_t)percent, '%');
+				APP_PRINT("[transfer] %d bytes %d %c\n", fw_bin_index, (uint32_t)percent, '%');
+				(void)percent;
 
 				transfer_fw_status_t fw_stt;
 				fw_stt.fw_header.bin_len = file_firmware_info.bin_len;
@@ -275,7 +270,11 @@ void* gw_task_fw_entry(void*) {
 			case GW_FW_TRANSFER_RES_OK: {
 				/* clear packed timeout and trigger next sequence */
 				timer_remove_attr(GW_TASK_FW_ID, GW_FW_PACKED_TIMEOUT);
-				timer_set(GW_TASK_FW_ID, GW_FW_TRANFER_REQ, GW_TIMER_FIRMWARE_TRANFER_PACKET_PENDING_INTERVAL, TIMER_ONE_SHOT);
+
+				ak_msg_t* s_msg = get_pure_msg();
+				set_msg_sig(s_msg, GW_FW_TRANFER_REQ);
+				set_msg_src_task_id(s_msg, GW_TASK_FW_ID);
+				task_post(GW_TASK_FW_ID, s_msg);
 			}
 				break;
 
@@ -341,7 +340,7 @@ void* gw_task_fw_entry(void*) {
 }
 
 void as_sm_release_firmware_update() {
-	APP_DBG("[FW] as_sm_release_firmware_update\n");
+	APP_PRINT("[FW] AS_SM_RELEASE_FIRMWARE_UPDATE\n");
 
 	//	ak_msg_t* s_msg = get_pure_msg();
 	//	set_msg_sig(s_msg, GW_AC_SM_FIRMWARE_UPDATE_RELEASE_REQ);
@@ -351,7 +350,8 @@ void as_sm_release_firmware_update() {
 }
 
 void fw_update_err(uint32_t err) {
-	APP_DBG("[FW] fw_no_need_to_update: %d\n", err);
+	(void)err;
+	APP_PRINT("[FW] FW_UPDATE_ERR: %d\n", err);
 	//	ak_msg_t* s_msg = get_common_msg();
 
 	//	set_if_src_task_id(s_msg, GW_TASK_FW_ID);
@@ -366,7 +366,8 @@ void fw_update_err(uint32_t err) {
 }
 
 void fw_no_need_to_update(firmware_header_t* fw) {
-	APP_DBG("[FW] fw_no_need_to_update\n");
+	(void)fw;
+	APP_PRINT("[FW] FW_NO_NEED_TO_UPDATE\n");
 	//	ak_msg_t* s_msg = get_common_msg();
 
 	//	set_if_src_task_id(s_msg, GW_TASK_FW_ID);
@@ -381,7 +382,8 @@ void fw_no_need_to_update(firmware_header_t* fw) {
 }
 
 void fw_started_transfer(firmware_header_t* fw) {
-	APP_DBG("[FW] fw_started_transfer\n");
+	(void)fw;
+	APP_PRINT("[FW] FW_STARTED_TRANSFER\n");
 	//	ak_msg_t* s_msg = get_common_msg();
 
 	//	set_if_src_task_id(s_msg, GW_TASK_FW_ID);
@@ -396,7 +398,7 @@ void fw_started_transfer(firmware_header_t* fw) {
 }
 
 void fw_device_busy() {
-	APP_DBG("[FW] fw_device_busy\n");
+	APP_PRINT("[FW] FW_DEVICE_BUSY\n");
 	//	ak_msg_t* s_msg = get_pure_msg();
 
 	//	set_if_src_task_id(s_msg, GW_TASK_FW_ID);
@@ -410,7 +412,7 @@ void fw_device_busy() {
 }
 
 void fw_packed_time_out() {
-	APP_DBG("[FW] fw_packed_time_out\n");
+	APP_PRINT("[FW] FW_PACKED_TIME_OUT\n");
 	//	ak_msg_t* s_msg = get_pure_msg();
 
 	//	set_if_src_task_id(s_msg, GW_TASK_FW_ID);
@@ -424,7 +426,8 @@ void fw_packed_time_out() {
 }
 
 void fw_transfer_status(transfer_fw_status_t* stt) {
-	APP_DBG("[FW] fw_transfer_status\n");
+	(void)stt;
+	APP_PRINT("[FW] FW_TRANSFER_STATUS\n");
 	//	ak_msg_t* s_msg = get_common_msg();
 
 	//	set_if_src_task_id(s_msg, GW_TASK_FW_ID);
@@ -439,7 +442,7 @@ void fw_transfer_status(transfer_fw_status_t* stt) {
 }
 
 void fw_checksum_err() {
-	APP_DBG("[FW] fw_checksum_err\n");
+	APP_PRINT("[FW] FW_CHECKSUM_ERR\n");
 	//	ak_msg_t* s_msg = get_pure_msg();
 
 	//	set_if_src_task_id(s_msg, GW_TASK_FW_ID);
@@ -453,7 +456,7 @@ void fw_checksum_err() {
 }
 
 void fw_device_internal_update_started() {
-	APP_DBG("[FW] fw_device_internal_update_started\n");
+	APP_PRINT("[FW] FW_DEVICE_INTERNAL_UPDATE_STARTED\n");
 	//	ak_msg_t* s_msg = get_pure_msg();
 
 	//	set_if_src_task_id(s_msg, GW_TASK_FW_ID);
@@ -467,7 +470,7 @@ void fw_device_internal_update_started() {
 }
 
 void fw_update_completed() {
-	APP_DBG("[FW] fw_update_completed\n");
+	APP_PRINT("[FW] FW_UPDATE_COMPLETED\n");
 	//	ak_msg_t* s_msg = get_pure_msg();
 
 	//	set_if_src_task_id(s_msg, GW_TASK_FW_ID);

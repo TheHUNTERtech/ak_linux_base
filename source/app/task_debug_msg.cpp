@@ -17,16 +17,11 @@
 
 q_msg_t gw_task_debug_msg_mailbox;
 
-pthread_cond_t cv;
-pthread_mutex_t mt_cv;
-
 void* gw_task_debug_msg_entry(void*) {
 	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_debug_msg_entry\n");
-
-	pthread_cond_init(&cv, NULL);
 
 	while (1) {
 

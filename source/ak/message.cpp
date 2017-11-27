@@ -68,13 +68,13 @@ void q_msg_free(ak_msg_t* msg) {
 		if (msg->header != NULL) {
 			if (msg->header->payload != NULL) {
 				free(msg->header->payload);
-				AK_MSG_DBG("[MSG] free payload:%08x\n", msg->header->payload);
+				AK_MSG_DBG("[MSG] free payload:%p\n", msg->header->payload);
 			}
 			free(msg->header);
-			AK_MSG_DBG("[MSG] free header:%08x\n", msg->header);
+			AK_MSG_DBG("[MSG] free header:%p\n", msg->header);
 		}
 		free(msg);
-		AK_MSG_DBG("[MSG] free msg:%08x\n", msg);
+		AK_MSG_DBG("[MSG] free msg:%p\n", msg);
 	}
 }
 

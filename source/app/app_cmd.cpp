@@ -67,42 +67,6 @@ int32_t i_shell_help(uint8_t* argv) {
 int32_t i_shell_cfg(uint8_t* argv) {
 	switch (*(argv + 4)) {
 	case '0': {
-		app_config_parameter_t config;
-
-		/* lora gateway */
-		strcpy(config.lora_gateway.lora_host,			"1.1.1.1");
-		strcpy(config.lora_gateway.mqtt_host,			"118.69.135.199");
-		config.lora_gateway.mqtt_port =					1883;
-		strcpy(config.lora_gateway.mqtt_user_name,		"y55fYL");
-		strcpy(config.lora_gateway.mqtt_psk,			"eJwKMNV2BQwC69PC");
-
-		/* mqtt server */
-		strcpy(config.pop_gateway.gateway_id_prefix,	"iot-");
-		strcpy(config.pop_gateway.gateway_id,			"pop-dev");
-		strcpy(config.pop_gateway.host,					"118.69.135.199");
-		config.pop_gateway.port =						1883;
-		strcpy(config.pop_gateway.user_name_view,		"fiot");
-		strcpy(config.pop_gateway.user_psk_view	,		"ZmlvdEA5MTFmaW90");
-		strcpy(config.pop_gateway.user_name_control,	"fciot");
-		strcpy(config.pop_gateway.user_psk_control,		"ZmNpb3RAOTExOTExZmNpb3Q=");
-
-		gateway_configure.write_config_data(&config);
-		gateway_configure.parser_config_file(&config);
-
-		APP_DBG("lora_gateway.lora_host:%s\n"			, config.lora_gateway.lora_host);
-		APP_DBG("lora_gateway.mqtt_host:%s\n"			, config.lora_gateway.mqtt_host);
-		APP_DBG("lora_gateway.mqtt_port:%d\n"			, config.lora_gateway.mqtt_port);
-		APP_DBG("lora_gateway.mqtt_user_name:%s\n"		, config.lora_gateway.mqtt_user_name);
-		APP_DBG("lora_gateway.mqtt_psk:%s\n"			, config.lora_gateway.mqtt_psk);
-
-		APP_DBG("mqtt_server.gateway_id_prefix:%s\n"	, config.pop_gateway.gateway_id_prefix);
-		APP_DBG("mqtt_server.gateway_id:%s\n"			, config.pop_gateway.gateway_id);
-		APP_DBG("mqtt_server.host:%s\n"					, config.pop_gateway.host);
-		APP_DBG("mqtt_server.port:%d\n"					, config.pop_gateway.port);
-		APP_DBG("mqtt_server.user_name_view:%s\n"		, config.pop_gateway.user_name_view);
-		APP_DBG("mqtt_server.user_psk_view:%s\n"		, config.pop_gateway.user_psk_view);
-		APP_DBG("mqtt_server.user_name_control:%s\n"	, config.pop_gateway.user_name_control);
-		APP_DBG("mqtt_server.user_psk_control:%s\n"		, config.pop_gateway.user_psk_control);
 	}
 		break;
 
@@ -125,7 +89,7 @@ int32_t i_shell_dbg(uint8_t* argv) {
 int32_t i_shell_fw(uint8_t* argv) {
 	switch (*(argv + 3)) {
 	case 'b': {
-		APP_DBG("[i_shell_fw] update slave boot request\n");
+		APP_PRINT("[i_shell_fw] update slave boot request\n");
 		gateway_fw_dev_update_req_t gateway_fw_dev_update_req;
 		memset(&gateway_fw_dev_update_req, 0, sizeof(gateway_fw_dev_update_req_t));
 		strcpy(gateway_fw_dev_update_req.dev_bin_path, "/home/thannt/workspace/projects/thannt/arm_cortex_m3_base_source/boot/build_arm_cortex_m3_base_boot_stm32l/arm_cortex_m3_base_boot.bin");
@@ -143,7 +107,7 @@ int32_t i_shell_fw(uint8_t* argv) {
 		break;
 
 	case 'a': {
-		APP_DBG("[i_shell_fw] update slave app request\n");
+		APP_PRINT("[i_shell_fw] update slave app request\n");
 		gateway_fw_dev_update_req_t gateway_fw_dev_update_req;
 		memset(&gateway_fw_dev_update_req, 0, sizeof(gateway_fw_dev_update_req_t));
 		strcpy(gateway_fw_dev_update_req.dev_bin_path, "/home/thannt/workspace/projects/thannt/arm_cortex_m3_base_source/application/build_arm_cortex_m3_base_application_stm32l/arm_cortex_m3_base_application.bin");
@@ -151,6 +115,24 @@ int32_t i_shell_fw(uint8_t* argv) {
 		gateway_fw_dev_update_req.source_if_type = IF_TYPE_UART_GW;
 		gateway_fw_dev_update_req.target_task_id = AC_TASK_FW_ID;
 		gateway_fw_dev_update_req.target_if_type = IF_TYPE_UART_AC;
+
+		ak_msg_t* s_msg = get_dynamic_msg();
+		set_msg_sig(s_msg, GW_FW_OTA_REQ);
+		set_data_dynamic_msg(s_msg, (uint8_t*)&gateway_fw_dev_update_req, sizeof(gateway_fw_dev_update_req_t));
+		set_msg_src_task_id(s_msg, GW_TASK_CONSOLE_ID);
+		task_post(GW_TASK_FW_ID, s_msg);
+	}
+		break;
+
+	case 'r': {
+		APP_PRINT("[i_shell_fw] update slave app request via rf24\n");
+		gateway_fw_dev_update_req_t gateway_fw_dev_update_req;
+		memset(&gateway_fw_dev_update_req, 0, sizeof(gateway_fw_dev_update_req_t));
+		strcpy(gateway_fw_dev_update_req.dev_bin_path, "/home/thannt/workspace/projects/thannt/arm_cortex_m3_base_source/application/build_arm_cortex_m3_base_application_stm32l/arm_cortex_m3_base_application.bin");
+		gateway_fw_dev_update_req.type_update   = TYPE_UPDATE_TARTGET_APP;
+		gateway_fw_dev_update_req.source_if_type = IF_TYPE_RF24_GW;
+		gateway_fw_dev_update_req.target_task_id = AC_TASK_FW_ID;
+		gateway_fw_dev_update_req.target_if_type = IF_TYPE_RF24_AC;
 
 		ak_msg_t* s_msg = get_dynamic_msg();
 		set_msg_sig(s_msg, GW_FW_OTA_REQ);

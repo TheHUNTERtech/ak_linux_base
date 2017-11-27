@@ -17,4 +17,5 @@ ak_task_t task_list[] = {
 	{	GW_TASK_SYS_ID,					TASK_PRI_LEVEL_1,	gw_task_sys_entry				,	&gw_task_sys_mailbox				,	"app system task"		},
 	{	GW_TASK_PUB_SUB_ID,				TASK_PRI_LEVEL_1,	gw_task_pub_sub_entry			,	&gw_task_pub_sub_mailbox			,	"public subscribe"		},
 	{	GW_TASK_FW_ID,					TASK_PRI_LEVEL_1,	gw_task_fw_entry				,	&gw_task_fw_mailbox					,	"firmware update"		},
+	{	GW_TASK_IF_USB_STICK_RF24_ID,	TASK_PRI_LEVEL_1,	gw_task_if_usb_stick_rf24_entry	,	&gw_task_if_usb_stick_rf24_mailbox	,	"usb stick rf24"		},
 };
