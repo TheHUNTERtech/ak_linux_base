@@ -62,8 +62,8 @@ static uint8_t rx_frame_state = SOP_STATE;
 
 static if_cpu_serial_frame_t if_cpu_serial_frame;
 static void rx_frame_parser(uint8_t* data, uint8_t len);
-int tx_frame_post(uint8_t* data, uint8_t len);
-
+static int tx_frame_post(uint8_t* data, uint8_t len);
+static int dync_msg_frame_post(ak_msg_dynamic_if_t* ak_msg_dynamic);
 static uint8_t tx_buffer[1024];
 
 void* gw_task_if_cpu_serial_entry(void*) {
@@ -122,9 +122,8 @@ void* gw_task_if_cpu_serial_entry(void*) {
 				break;
 
 			case DYNAMIC_MSG_TYPE: {
-				APP_DBG("[IF CPU SERIAL][SEND] COMMON_MSG_TYPE\n");
+				APP_DBG("[IF CPU SERIAL][SEND] DYNAMIC_MSG_TYPE\n");
 				ak_msg_dynamic_if_t app_if_msg;
-				uint32_t app_if_msg_len;
 
 				/* assign if message */
 				app_if_msg.header.type			= DYNAMIC_MSG_TYPE;
@@ -134,13 +133,10 @@ void* gw_task_if_cpu_serial_entry(void*) {
 				app_if_msg.header.src_task_id	= msg->header->if_src_task_id;
 				app_if_msg.header.des_task_id	= msg->header->if_des_task_id;
 
-				app_if_msg.len = msg->header->len;
+				app_if_msg.len = get_data_len_dynamic_msg(msg);
 				app_if_msg.data = (uint8_t*)malloc(app_if_msg.len);
 				get_data_dynamic_msg(msg, app_if_msg.data, app_if_msg.len);
-
-				app_if_msg_len = sizeof(ak_msg_if_header_t) + sizeof(uint32_t) + app_if_msg.len;
-
-				tx_frame_post((uint8_t*)&app_if_msg, app_if_msg_len);
+				dync_msg_frame_post(&app_if_msg);
 				free(app_if_msg.data);
 			}
 				break;
@@ -210,7 +206,6 @@ int if_cpu_serial_opentty(const char* devpath) {
 	}
 	return 0;
 }
-
 
 /* Calculate IF_CPU_SERIAL frame FCS */
 uint8_t if_cpu_serial_calcfcs(uint8_t len, uint8_t *data_ptr) {
@@ -330,7 +325,9 @@ void rx_frame_parser(uint8_t* data, uint8_t len) {
 					set_if_src_type(s_msg, if_msg_header->if_src_type);
 					set_if_des_type(s_msg, if_msg_header->if_des_type);
 					set_if_sig(s_msg, if_msg_header->sig);
-					set_if_data_dynamic_msg(s_msg, ((ak_msg_dynamic_if_t*)if_msg_header)->data, ((ak_msg_dynamic_if_t*)if_msg_header)->len);
+
+					uint8_t* data_msg = ((uint8_t*)if_msg_header + sizeof(ak_msg_if_header_t) + sizeof(uint32_t));
+					set_if_data_dynamic_msg(s_msg, data_msg, ((ak_msg_dynamic_if_t*)if_msg_header)->len);
 
 					set_msg_sig(s_msg, GW_IF_DYNAMIC_MSG_IN);
 					set_msg_src_task_id(s_msg, GW_TASK_IF_APP_ID);
@@ -360,4 +357,34 @@ int tx_frame_post(uint8_t* data, uint8_t len) {
 	memcpy(&tx_buffer[2], data, len);
 	tx_buffer[2 + len] = if_cpu_serial_calcfcs(len, data);
 	return write(if_cpu_serial_fd, tx_buffer, (len + 3));
+}
+
+int dync_msg_frame_post(ak_msg_dynamic_if_t* ak_msg_dynamic) {
+	uint32_t dynamic_message_len = sizeof(ak_msg_if_header_t) + sizeof(uint32_t) + ak_msg_dynamic->len;
+	uint32_t dynamic_message_header_len = sizeof(ak_msg_if_header_t) + sizeof(uint32_t);
+
+	if (dynamic_message_len > 255) {
+		FATAL("IF_UART", 0x04);
+	}
+
+	/* calculate checksum */
+	uint8_t xor_result = dynamic_message_len;
+	uint8_t* raw_data = (uint8_t*)ak_msg_dynamic;
+	/* checksum header + len */
+	for (uint32_t i = 0; i < dynamic_message_header_len; i++, raw_data++) {
+		xor_result = xor_result ^ *raw_data;
+	}
+	/* checksum data */
+	for (uint32_t i = 0; i < ak_msg_dynamic->len; i++) {
+		xor_result = xor_result ^ ak_msg_dynamic->data[i];
+	}
+
+	tx_buffer[0] = IPCPU_SOP_CHAR; /* start of frame */
+	tx_buffer[1] = dynamic_message_len; /* len of frame */
+	memcpy(&tx_buffer[2], ak_msg_dynamic, dynamic_message_header_len); /* copy header to tx frame */
+	memcpy(&tx_buffer[2 + dynamic_message_header_len], ak_msg_dynamic->data, ak_msg_dynamic->len); /* copy message data */
+	tx_buffer[2 + dynamic_message_len] = xor_result; /* checksum */
+
+	/* put frame through physic layer */
+	return write(if_cpu_serial_fd, tx_buffer, (dynamic_message_len + 3));
 }

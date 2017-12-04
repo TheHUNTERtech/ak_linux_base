@@ -79,6 +79,22 @@ int32_t i_shell_cfg(uint8_t* argv) {
 
 int32_t i_shell_dbg(uint8_t* argv) {
 	switch (*(argv + 4)) {
+	case '1': {
+		ak_msg_t* s_msg = get_dynamic_msg();
+		set_if_des_type(s_msg, IF_TYPE_UART_GW);
+		set_if_src_type(s_msg, IF_TYPE_UART_AC);
+		set_if_des_task_id(s_msg, AC_TASK_DBG_ID);
+		set_if_sig(s_msg, AC_DBG_TEST_3);
+		uint8_t* send_data = (uint8_t*)malloc(150);
+		for (uint8_t i = 0; i < 150; i++) {
+			*(send_data + i) = i;
+		}
+		set_if_data_dynamic_msg(s_msg, send_data, 150);
+
+		set_msg_sig(s_msg, GW_IF_DYNAMIC_MSG_OUT);
+		task_post(GW_TASK_IF_ID, s_msg);
+	}
+		break;
 
 	default:
 		break;

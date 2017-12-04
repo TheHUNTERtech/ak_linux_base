@@ -406,6 +406,22 @@ void get_data_dynamic_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 	}
 }
 
+uint8_t get_data_len_dynamic_msg(ak_msg_t* msg) {
+	uint8_t ret = 0;
+	if (msg != NULL) {
+		if (msg->header->type == DYNAMIC_MSG_TYPE) {
+			ret = msg->header->len;
+		}
+		else {
+			FATAL("AK", 0x22);
+		}
+	}
+	else {
+		FATAL("AK", 0x23);
+	}
+	return ret;
+}
+
 void task_post(uint32_t task_dst_id, ak_msg_t* msg) {
 
 	if (task_dst_id >= ak_thread_table_len) {

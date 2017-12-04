@@ -30,6 +30,26 @@ void* gw_task_debug_msg_entry(void*) {
 			ak_msg_t* msg = rev_msg(GW_TASK_DEBUG_MSG_ID);
 
 			switch (msg->header->sig) {
+			case GW_DEBUG_MSG_1: {
+				APP_DBG("GW_DEBUG_MSG_1\n");
+				uint8_t data_len = get_data_len_dynamic_msg(msg);
+				APP_DBG("data_len: %d\n", data_len);
+
+				uint8_t* rev_data = (uint8_t*)malloc(data_len);
+				get_data_dynamic_msg(msg, rev_data, data_len);
+
+				APP_DBG("rev_data:");
+				for (uint32_t i = 0; i < data_len; i++) {
+					printf(" %02X", *(rev_data + i));
+				}
+				printf("\n");
+			}
+				break;
+
+			case GW_DEBUG_MSG_2: {
+				APP_DBG("GW_DEBUG_MSG_2\n");
+			}
+				break;
 
 			default:
 				break;

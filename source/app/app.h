@@ -87,13 +87,14 @@ enum {
 };
 
 /*****************************************************************************/
-/*  task RF24_NETWORK_MNG define
+/*  task GW_TASK_DEBUG_MSG define
  */
 /*****************************************************************************/
 /* define timer */
 /* define signal */
 enum {
-	GW_RF24_NWK_MNG_PING = AK_USER_DEFINE_SIG,
+	GW_DEBUG_MSG_1 = AK_USER_DEFINE_SIG,
+	GW_DEBUG_MSG_2
 };
 
 /*****************************************************************************/

@@ -255,6 +255,13 @@ extern void set_data_dynamic_msg(ak_msg_t* msg, uint8_t* data, uint32_t len);
 extern void get_data_dynamic_msg(ak_msg_t* msg, uint8_t* data, uint32_t len);
 
 /**
+ * @brief get_data_len_dynamic_msg
+ * @param msg
+ * @return len_dynamic_msg
+ */
+extern uint8_t get_data_len_dynamic_msg(ak_msg_t* msg);
+
+/**
  * @brief task_post
  * post message to target task
  * @param task_dst_id
