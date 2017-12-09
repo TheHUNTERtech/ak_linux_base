@@ -106,10 +106,7 @@ void* gw_task_fw_entry(void*) {
 					/* resend chain firmware packet */
 					fw_bin_index -= fw_bin_packet_len;
 
-					ak_msg_t* s_msg = get_pure_msg();
-					set_msg_sig(s_msg, GW_FW_TRANFER_REQ);
-					set_msg_src_task_id(s_msg, GW_TASK_FW_ID);
-					task_post(GW_TASK_FW_ID, s_msg);
+					task_post_pure_msg(GW_TASK_FW_ID, GW_TASK_FW_ID, GW_FW_TRANFER_REQ);
 				}
 			}
 				break;
@@ -127,11 +124,7 @@ void* gw_task_fw_entry(void*) {
 					fw_update_err(1);
 				}
 				else {
-					ak_msg_t* s_msg = get_pure_msg();
-					set_msg_sig(s_msg, GW_FW_SM_UPDATE_RES_OK);
-
-					set_msg_src_task_id(s_msg, GW_TASK_FW_ID);
-					task_post(GW_TASK_FW_ID, s_msg);
+					task_post_pure_msg(GW_TASK_FW_ID, GW_TASK_FW_ID, GW_FW_SM_UPDATE_RES_OK);
 				}
 			}
 				break;
@@ -207,11 +200,7 @@ void* gw_task_fw_entry(void*) {
 				APP_DBG("GW_FW_UPDATE_RES_OK\n");
 				fw_bin_index = 0;
 
-				ak_msg_t* s_msg = get_pure_msg();
-				set_msg_sig(s_msg, GW_FW_TRANFER_REQ);
-
-				set_msg_src_task_id(s_msg, GW_TASK_FW_ID);
-				task_post(GW_TASK_FW_ID, s_msg);
+				task_post_pure_msg(GW_TASK_FW_ID, GW_TASK_FW_ID, GW_FW_TRANFER_REQ);
 
 				fw_started_transfer(&file_firmware_info);
 			}
@@ -271,10 +260,7 @@ void* gw_task_fw_entry(void*) {
 				/* clear packed timeout and trigger next sequence */
 				timer_remove_attr(GW_TASK_FW_ID, GW_FW_PACKED_TIMEOUT);
 
-				ak_msg_t* s_msg = get_pure_msg();
-				set_msg_sig(s_msg, GW_FW_TRANFER_REQ);
-				set_msg_src_task_id(s_msg, GW_TASK_FW_ID);
-				task_post(GW_TASK_FW_ID, s_msg);
+				task_post_pure_msg(GW_TASK_FW_ID, GW_TASK_FW_ID, GW_FW_TRANFER_REQ);
 			}
 				break;
 

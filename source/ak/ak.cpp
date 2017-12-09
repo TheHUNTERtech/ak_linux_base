@@ -446,6 +446,29 @@ void task_post(uint32_t task_dst_id, ak_msg_t* msg) {
 	}
 }
 
+void task_post_pure_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig) {
+	ak_msg_t* s_msg = get_pure_msg();
+	set_msg_sig(s_msg, sig);
+	set_msg_src_task_id(s_msg, task_src_id);
+	task_post(task_dst_id, s_msg);
+}
+
+void task_post_common_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len) {
+	ak_msg_t* s_msg = get_common_msg();
+	set_msg_sig(s_msg, sig);
+	set_data_common_msg(s_msg, data, len);
+	set_msg_src_task_id(s_msg, task_src_id);
+	task_post(task_dst_id, s_msg);
+}
+
+void task_post_dynamic_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len) {
+	ak_msg_t* s_msg = get_dynamic_msg();
+	set_msg_sig(s_msg, sig);
+	set_data_dynamic_msg(s_msg, data, len);
+	set_msg_src_task_id(s_msg, task_src_id);
+	task_post(task_dst_id, s_msg);
+}
+
 bool msg_available(uint32_t des_task_id) {
 	if (des_task_id >= AK_TASK_LIST_LEN) {
 		FATAL("AK", 0x1C);

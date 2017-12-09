@@ -270,6 +270,34 @@ extern uint8_t get_data_len_dynamic_msg(ak_msg_t* msg);
 extern void task_post(uint32_t task_dst_id, ak_msg_t* msg);
 
 /**
+ * @brief task_post_pure_msg
+ * @param task_src_id
+ * @param task_dst_id
+ * @param sig
+ */
+extern void task_post_pure_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig);
+
+/**
+ * @brief task_post_common_msg
+ * @param task_src_id
+ * @param task_dst_id
+ * @param sig
+ * @param data
+ * @param len
+ */
+extern void task_post_common_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len);
+
+/**
+ * @brief task_post_dynamic_msg
+ * @param task_src_id
+ * @param task_dst_id
+ * @param sig
+ * @param data
+ * @param len
+ */
+extern void task_post_dynamic_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len);
+
+/**
  * @brief msg_available
  * check message exist in message queue
  * @param des_task_id
