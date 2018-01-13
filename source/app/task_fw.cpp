@@ -7,13 +7,13 @@
 #include <sys/stat.h>
 #include <string>
 
-#include "../ak/ak.h"
-#include "../ak/timer.h"
+#include "ak.h"
+#include "timer.h"
 
-#include "../common/firmware.h"
+#include "firmware.h"
 
-#include "../sys/sys_boot.h"
-#include "../sys/sys_dbg.h"
+#include "sys_boot.h"
+#include "sys_dbg.h"
 
 #include "app.h"
 #include "app_if.h"
@@ -81,7 +81,7 @@ void* gw_task_fw_entry(void*) {
 			/* handler message */
 			switch (msg->header->sig) {
 			case GW_FW_UPDATE_COMPLETED: {
-				APP_DBG("GW_FW_UPDATE_COMPLETED\n");
+				APP_DBG_SIG("GW_FW_UPDATE_COMPLETED\n");
 				timer_remove_attr(GW_TASK_FW_ID, GW_FW_DEV_INTERNAL_UPDATE_TIMEOUT);
 				as_sm_release_firmware_update();
 				fw_update_completed();
@@ -89,14 +89,14 @@ void* gw_task_fw_entry(void*) {
 				break;
 
 			case GW_FW_DEV_INTERNAL_UPDATE_TIMEOUT: {
-				APP_DBG("GW_FW_DEV_INTERNAL_UPDATE_TIMEOUT\n");
+				APP_DBG_SIG("GW_FW_DEV_INTERNAL_UPDATE_TIMEOUT\n");
 				as_sm_release_firmware_update();
 				fw_update_err(3);
 			}
 				break;
 
 			case GW_FW_PACKED_TIMEOUT: {
-				APP_DBG("GW_FW_PACKED_TIMEOUT\n");
+				APP_DBG_SIG("GW_FW_PACKED_TIMEOUT\n");
 
 				if (gw_fw_packed_timeout_retry_counter++ > GW_FW_PACKED_TIMEOUT_RETRY_COUNTER_MAX) {
 					as_sm_release_firmware_update();
@@ -112,7 +112,7 @@ void* gw_task_fw_entry(void*) {
 				break;
 
 			case GW_FW_OTA_REQ: {
-				APP_DBG("GW_FW_OTA_REQ\n");
+				APP_DBG_SIG("GW_FW_OTA_REQ\n");
 				get_data_dynamic_msg(msg, (uint8_t*)&gateway_fw_dev_update_req, sizeof(gateway_fw_dev_update_req_t));
 
 				firmware_file_name.assign((const char*)gateway_fw_dev_update_req.dev_bin_path);
@@ -130,7 +130,7 @@ void* gw_task_fw_entry(void*) {
 				break;
 
 			case GW_FW_SM_UPDATE_RES_OK: {
-				APP_DBG("GW_FW_SM_UPDATE_RES_OK\n");
+				APP_DBG_SIG("GW_FW_SM_UPDATE_RES_OK\n");
 				ak_msg_t* s_msg = get_pure_msg();
 				set_msg_sig(s_msg, GW_IF_PURE_MSG_OUT);
 
@@ -157,7 +157,7 @@ void* gw_task_fw_entry(void*) {
 				break;
 
 			case GW_FW_GET_FIRMWARE_INFO_TIMEOUT: {
-				APP_DBG("GW_FW_GET_FIRMWARE_INFO_TIMEOUT\n");
+				APP_DBG_SIG("GW_FW_GET_FIRMWARE_INFO_TIMEOUT\n");
 				as_sm_release_firmware_update();
 				fw_update_err(2);
 			}
@@ -166,7 +166,7 @@ void* gw_task_fw_entry(void*) {
 			case GW_FW_CURRENT_INFO_RES: {
 				timer_remove_attr(GW_TASK_FW_ID, GW_FW_GET_FIRMWARE_INFO_TIMEOUT);
 
-				APP_DBG("GW_FW_CURRENT_INFO_RES\n");
+				APP_DBG_SIG("GW_FW_CURRENT_INFO_RES\n");
 				get_data_common_msg(msg, (uint8_t*)&current_firmware_info, sizeof(firmware_header_t));
 				APP_PRINT("current firmware checksum: %04X\n", current_firmware_info.checksum);
 				APP_PRINT("current firmware bin_len: %d\n", current_firmware_info.bin_len);
@@ -197,7 +197,7 @@ void* gw_task_fw_entry(void*) {
 				break;
 
 			case GW_FW_UPDATE_RES_OK: {
-				APP_DBG("GW_FW_UPDATE_RES_OK\n");
+				APP_DBG_SIG("GW_FW_UPDATE_RES_OK\n");
 				fw_bin_index = 0;
 
 				task_post_pure_msg(GW_TASK_FW_ID, GW_TASK_FW_ID, GW_FW_TRANFER_REQ);
@@ -265,7 +265,7 @@ void* gw_task_fw_entry(void*) {
 				break;
 
 			case GW_FW_INTERNAL_UPDATE_REQ: {
-				APP_DBG("GW_FW_INTERNAL_UPDATE_REQ\n");
+				APP_DBG_SIG("GW_FW_INTERNAL_UPDATE_REQ\n");
 
 				timer_remove_attr(GW_TASK_FW_ID, GW_FW_PACKED_TIMEOUT);
 
@@ -296,14 +296,14 @@ void* gw_task_fw_entry(void*) {
 				break;
 
 			case GW_FW_UPDATE_BUSY: {
-				APP_DBG("GW_FW_UPDATE_BUSY\n");
+				APP_DBG_SIG("GW_FW_UPDATE_BUSY\n");
 				as_sm_release_firmware_update();
 				fw_device_busy();
 			}
 				break;
 
 			case GW_FW_TRANSFER_CHECKSUM_ERR: {
-				APP_DBG("GW_FW_TRANSFER_CHECKSUM_ERR\n");
+				APP_DBG_SIG("GW_FW_TRANSFER_CHECKSUM_ERR\n");
 				timer_remove_attr(GW_TASK_FW_ID, GW_FW_PACKED_TIMEOUT);
 				as_sm_release_firmware_update();
 				fw_checksum_err();
@@ -311,7 +311,7 @@ void* gw_task_fw_entry(void*) {
 				break;
 
 			case GW_FW_SM_RELEASE_RES_OK: {
-				APP_DBG("GW_FW_SM_RELEASE_RES_OK\n");
+				APP_DBG_SIG("GW_FW_SM_RELEASE_RES_OK\n");
 			}
 
 			default:

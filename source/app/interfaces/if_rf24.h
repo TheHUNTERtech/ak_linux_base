@@ -8,8 +8,8 @@
 #include <RF24Network/RF24Network.h>
 #include <RF24Network/RF24Network_config.h>
 
-#include "../ak/message.h"
-#include "../app_data.h"
+#include "message.h"
+#include "app_data.h"
 
 #define RF24_BUFFER_SIZE		128
 

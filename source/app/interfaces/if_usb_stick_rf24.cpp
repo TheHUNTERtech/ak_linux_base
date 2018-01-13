@@ -1,4 +1,3 @@
-#include "if_usb_stick_rf24.h"
 #include <unistd.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -14,9 +13,9 @@
 #include <errno.h>
 #include <semaphore.h>
 
-#include "../ak/ak.h"
+#include "ak.h"
 
-#include "../sys/sys_dbg.h"
+#include "sys_dbg.h"
 
 #include "app.h"
 #include "app_if.h"
@@ -153,8 +152,6 @@ void* gw_task_if_usb_stick_rf24_entry(void*) {
 			/* free message */
 			free_msg(msg);
 		}
-
-		usleep(1000);
 	}
 
 	return (void*)0;

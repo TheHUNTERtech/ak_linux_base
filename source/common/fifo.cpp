@@ -2,8 +2,7 @@
 #include <stdlib.h>
 
 #include "fifo.h"
-#include "../sys/sys_dbg.h"
-
+#include "sys_dbg.h"
 
 void fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size) {
 	if (fifo == NULL || buffer == NULL) {
@@ -25,6 +24,10 @@ uint32_t fifo_availble(fifo_t* fifo) {
 
 bool fifo_is_empty(fifo_t* fifo) {
 	return (fifo->fill_size == 0) ? true : false;
+}
+
+bool fifo_is_full(fifo_t* fifo) {
+	return (fifo->fill_size == fifo->buffer_size) ? true : false;
 }
 
 uint32_t fifo_put(fifo_t* fifo, void* data) {

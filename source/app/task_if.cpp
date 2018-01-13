@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../ak/ak.h"
+#include "ak.h"
 
-#include "../sys/sys_dbg.h"
+#include "sys_dbg.h"
 
 #include "app.h"
 #include "app_if.h"
@@ -168,7 +168,6 @@ void app_if_forward_msg(ak_msg_t* msg) {
 void cpu_serial_if_forward_msg(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_IF_PURE_MSG_IN:	{
-		APP_DBG("GW_IF_PURE_MSG_IN\n");
 		msg_inc_ref_count(msg);
 
 		set_msg_sig(msg, msg->header->if_sig);
@@ -178,7 +177,6 @@ void cpu_serial_if_forward_msg(ak_msg_t* msg) {
 		break;
 
 	case GW_IF_COMMON_MSG_IN: {
-		APP_DBG("GW_IF_COMMON_MSG_IN\n");
 		msg_inc_ref_count(msg);
 
 		set_msg_sig(msg, msg->header->if_sig);
@@ -188,7 +186,6 @@ void cpu_serial_if_forward_msg(ak_msg_t* msg) {
 		break;
 
 	case GW_IF_DYNAMIC_MSG_IN: {
-		APP_DBG("GW_IF_DYNAMIC_MSG_IN\n");
 		msg_inc_ref_count(msg);
 
 		set_msg_sig(msg, msg->header->if_sig);
@@ -198,21 +195,18 @@ void cpu_serial_if_forward_msg(ak_msg_t* msg) {
 		break;
 
 	case GW_IF_PURE_MSG_OUT: {
-		APP_DBG("GW_IF_PURE_MSG_OUT\n");
 		msg_inc_ref_count(msg);
 		task_post(GW_TASK_IF_CPU_SERIAL_ID, msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_OUT: {
-		APP_DBG("GW_IF_COMMON_MSG_OUT\n");
 		msg_inc_ref_count(msg);
 		task_post(GW_TASK_IF_CPU_SERIAL_ID, msg);
 	}
 		break;
 
 	case GW_IF_DYNAMIC_MSG_OUT: {
-		APP_DBG("GW_IF_DYNAMIC_MSG_OUT\n");
 		msg_inc_ref_count(msg);
 		task_post(GW_TASK_IF_CPU_SERIAL_ID, msg);
 	}
@@ -228,7 +222,6 @@ void cpu_serial_if_forward_msg(ak_msg_t* msg) {
 void usb_stick_rf24_if_forward_msg(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_IF_PURE_MSG_IN:	{
-		APP_DBG("GW_IF_PURE_MSG_IN\n");
 		msg_inc_ref_count(msg);
 
 		set_msg_sig(msg, msg->header->if_sig);
@@ -238,7 +231,6 @@ void usb_stick_rf24_if_forward_msg(ak_msg_t* msg) {
 		break;
 
 	case GW_IF_COMMON_MSG_IN: {
-		APP_DBG("GW_IF_COMMON_MSG_IN\n");
 		msg_inc_ref_count(msg);
 
 		set_msg_sig(msg, msg->header->if_sig);
@@ -248,7 +240,6 @@ void usb_stick_rf24_if_forward_msg(ak_msg_t* msg) {
 		break;
 
 	case GW_IF_DYNAMIC_MSG_IN: {
-		APP_DBG("GW_IF_DYNAMIC_MSG_IN\n");
 		msg_inc_ref_count(msg);
 
 		set_msg_sig(msg, msg->header->if_sig);
@@ -258,21 +249,18 @@ void usb_stick_rf24_if_forward_msg(ak_msg_t* msg) {
 		break;
 
 	case GW_IF_PURE_MSG_OUT: {
-		APP_DBG("GW_IF_PURE_MSG_OUT\n");
 		msg_inc_ref_count(msg);
 		task_post(GW_TASK_IF_USB_STICK_RF24_ID, msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_OUT: {
-		APP_DBG("GW_IF_COMMON_MSG_OUT\n");
 		msg_inc_ref_count(msg);
 		task_post(GW_TASK_IF_USB_STICK_RF24_ID, msg);
 	}
 		break;
 
 	case GW_IF_DYNAMIC_MSG_OUT: {
-		APP_DBG("GW_IF_DYNAMIC_MSG_OUT\n");
 		msg_inc_ref_count(msg);
 		task_post(GW_TASK_IF_USB_STICK_RF24_ID, msg);
 	}

@@ -1,7 +1,7 @@
 #ifndef __IF_CONSOLE_H__
 #define __IF_CONSOLE_H__
 
-#include "../ak/message.h"
+#include "message.h"
 
 #define CMD_BUFFER_SIZE						32
 

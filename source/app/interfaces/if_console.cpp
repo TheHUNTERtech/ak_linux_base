@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../ak/ak.h"
+#include "ak.h"
 
 #include "app.h"
 #include "app_if.h"

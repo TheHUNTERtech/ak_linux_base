@@ -1,8 +1,8 @@
 #ifndef __TASK_LIST_H__
 #define __TASK_LIST_H__
 
-#include "../ak/ak.h"
-#include "../ak/message.h"
+#include "ak.h"
+#include "message.h"
 
 #include "app_data.h"
 
@@ -23,6 +23,10 @@
 #include "task_sys.h"
 #include "task_pub_sub.h"
 #include "task_fw.h"
+
+#include "link_phy.h"
+#include "link_mac.h"
+#include "link.h"
 
 /** default if_des_type when get pool memory
  * this define MUST BE coresponding with app.
@@ -48,6 +52,11 @@ enum {
 	GW_TASK_PUB_SUB_ID,
 	GW_TASK_FW_ID,
 	GW_TASK_IF_USB_STICK_RF24_ID,
+
+	/* LINK TASKS */
+	GW_LINK_PHY_ID,
+	GW_LINK_MAC_ID,
+	GW_LINK_ID,
 
 	/* EOT task ID */
 	AK_TASK_LIST_LEN,

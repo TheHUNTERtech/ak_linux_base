@@ -27,6 +27,7 @@ typedef struct {
 extern void		fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size);
 extern uint32_t	fifo_availble(fifo_t* fifo);
 extern bool		fifo_is_empty(fifo_t* fifo);
+extern bool		fifo_is_full(fifo_t* fifo);
 extern uint32_t	fifo_put(fifo_t* fifo, void* data);
 extern uint32_t	fifo_get(fifo_t* fifo, void* data);
 

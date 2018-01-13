@@ -6,7 +6,7 @@
 #include <vector>
 #include <stdbool.h>
 
-#include "../../common/json.hpp"
+#include "json.hpp"
 
 using namespace std;
 using json = nlohmann::json;

@@ -13,14 +13,13 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include "../app/task_list.h"
-
-#include "../sys/sys_dbg.h"
-
 #include "ak.h"
 #include "ak_dbg.h"
-
 #include "timer.h"
+
+#include "sys_dbg.h"
+
+#include "task_list.h"
 
 /* internal define */
 #define CLOCKID				CLOCK_REALTIME
@@ -133,7 +132,7 @@ void* timer_entry(void*) {
 	wait_all_tasks_started();
 
 	while(1) {
-		sleep(100000);
+		usleep(1000000);
 	}
 
 	return (void*)0;

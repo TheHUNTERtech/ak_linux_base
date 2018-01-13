@@ -17,6 +17,7 @@ WARNNING_OPTION	+=	-Werror -W -Wno-missing-field-initializers
 -include source/app/Makefile.mk
 -include source/common/Makefile.mk
 -include source/driver/Makefile.mk
+-include source/networks/Makefile.mk
 
 CXXFLAGS	+= -I/usr/local/include
 CXXFLAGS	+= -I/usr/include
@@ -57,20 +58,25 @@ $(OBJ_DIR)/%.o: %.c
 $(OBJ_DIR)/$(NAME_MODULE): $(OBJ)
 	@echo ---------- START LINK PROJECT ----------
 	@echo $(CXX) -o $@ $^ $(CXXFLAGS)
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+	@$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
+.PHONY: copy
 copy:
 	scp -r ./* pi@192.168.168.144:/home/pi/workspace/ak_linux_base
 
+.PHONY: flash
 flash:
 	@sudo LD_LIBRARY_PATH=/usr/local/lib/ $(OBJ_DIR)/$(NAME_MODULE)
 
+.PHONY: debug
 debug:
 	sudo gdb $(OBJ_DIR)/$(NAME_MODULE)
 
+.PHONY: install
 install:
 	cp $(OBJ_DIR)/$(NAME_MODULE) /usr/local/bin
 
+.PHONY: clean
 clean:
 	@echo rm -rf $(OBJ_DIR)
 	@rm -rf $(OBJ_DIR)

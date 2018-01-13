@@ -15,9 +15,18 @@ enum {
 	AC_TASK_DBG_ID,
 	AC_TASK_DISPLAY_ID,
 
+	/* NRF24 NETWORKS */
+	AC_RF24_PHY_ID,
+	AC_RF24_MAC_ID,
+	AC_RF24_NWK_ID,
+
+	/* LINK */
+	AC_LINK_PHY_ID,
+	AC_LINK_MAC_ID,
+	AC_LINK_ID,
+
 	/* EOT task ID */
 	AK_TASK_EOT_ID,
 };
-
 
 #endif //__TASK_LIST_IF_H__

@@ -13,10 +13,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "../ak/ak.h"
-#include "../ak/timer.h"
+#include "ak.h"
+#include "timer.h"
 
-#include "../common/cmd_line.h"
+#include "cmd_line.h"
 
 #include "app.h"
 #include "app_if.h"
@@ -77,22 +77,73 @@ int32_t i_shell_cfg(uint8_t* argv) {
 	return 0;
 }
 
+#include "link.h"
+#include "link_sig.h"
+
 int32_t i_shell_dbg(uint8_t* argv) {
 	switch (*(argv + 4)) {
 	case '1': {
-		ak_msg_t* s_msg = get_dynamic_msg();
+		ak_msg_t* s_msg = get_pure_msg();
 		set_if_des_type(s_msg, IF_TYPE_UART_GW);
 		set_if_src_type(s_msg, IF_TYPE_UART_AC);
 		set_if_des_task_id(s_msg, AC_TASK_DBG_ID);
-		set_if_sig(s_msg, AC_DBG_TEST_3);
-		uint8_t* send_data = (uint8_t*)malloc(150);
-		for (uint8_t i = 0; i < 150; i++) {
+		set_if_sig(s_msg, AC_DBG_TEST_2);
+
+		set_msg_sig(s_msg, GW_LINK_SEND_PURE_MSG);
+		task_post(GW_LINK_ID, s_msg);
+	}
+		break;
+
+	case '2': {
+		uint8_t test_buf[64];
+		for (int i = 0; i < 64; i++) {
+			test_buf[i] = 0xAA;
+		}
+
+		ak_msg_t* s_msg = get_common_msg();
+		set_if_des_type(s_msg, IF_TYPE_UART_GW);
+		set_if_src_type(s_msg, IF_TYPE_UART_AC);
+		set_if_des_task_id(s_msg, AC_TASK_DBG_ID);
+		set_if_sig(s_msg, AC_DBG_TEST_2);
+		set_if_data_common_msg(s_msg, test_buf, 64);
+
+		set_msg_sig(s_msg, GW_LINK_SEND_COMMON_MSG);
+		task_post(GW_LINK_ID, s_msg);
+	}
+		break;
+
+	case '3': {
+		ak_msg_t* s_msg = get_dynamic_msg();
+		set_if_des_type(s_msg, IF_TYPE_UART_GW);
+		set_if_src_type(s_msg, IF_TYPE_UART_AC);
+		set_if_des_task_id(s_msg, GW_TASK_DEBUG_MSG_ID);
+		set_if_sig(s_msg, GW_DEBUG_MSG_1);
+		uint8_t* send_data = (uint8_t*)malloc(254);
+		for (uint8_t i = 0; i < 254; i++) {
 			*(send_data + i) = i;
 		}
-		set_if_data_dynamic_msg(s_msg, send_data, 150);
+		set_if_data_dynamic_msg(s_msg, send_data, 254);
+		set_msg_sig(s_msg, GW_LINK_SEND_DYNAMIC_MSG);
+		task_post(GW_LINK_ID, s_msg);
+		free(send_data);
+	}
+		break;
 
-		set_msg_sig(s_msg, GW_IF_DYNAMIC_MSG_OUT);
-		task_post(GW_TASK_IF_ID, s_msg);
+	case '4': {
+		uint8_t test_buf[64];
+		for (int i = 0; i < 64; i++) {
+			test_buf[i] = i;
+		}
+
+		ak_msg_t* s_msg = get_common_msg();
+		set_if_des_type(s_msg, IF_TYPE_RF24_GW);
+		set_if_src_type(s_msg, IF_TYPE_RF24_AC);
+		set_if_des_task_id(s_msg, 123);
+		set_if_sig(s_msg, 123);
+		set_if_data_common_msg(s_msg, test_buf, 64);
+
+		set_msg_sig(s_msg, GW_LINK_SEND_DATA);
+		task_post(GW_LINK_ID, s_msg);
 	}
 		break;
 
@@ -111,7 +162,7 @@ int32_t i_shell_fw(uint8_t* argv) {
 		strcpy(gateway_fw_dev_update_req.dev_bin_path, "/home/thannt/workspace/projects/thannt/arm_cortex_m3_base_source/boot/build_arm_cortex_m3_base_boot_stm32l/arm_cortex_m3_base_boot.bin");
 		gateway_fw_dev_update_req.type_update   = TYPE_UPDATE_TARTGET_BOOT;
 		gateway_fw_dev_update_req.source_if_type = IF_TYPE_UART_GW;
-		gateway_fw_dev_update_req.target_task_id = AC_TASK_FW_ID;
+		gateway_fw_dev_update_req.target_task_id = GW_TASK_FW_ID;
 		gateway_fw_dev_update_req.target_if_type = IF_TYPE_UART_AC;
 
 		ak_msg_t* s_msg = get_dynamic_msg();
@@ -147,7 +198,7 @@ int32_t i_shell_fw(uint8_t* argv) {
 		strcpy(gateway_fw_dev_update_req.dev_bin_path, "/home/thannt/workspace/projects/thannt/arm_cortex_m3_base_source/application/build_arm_cortex_m3_base_application_stm32l/arm_cortex_m3_base_application.bin");
 		gateway_fw_dev_update_req.type_update   = TYPE_UPDATE_TARTGET_APP;
 		gateway_fw_dev_update_req.source_if_type = IF_TYPE_RF24_GW;
-		gateway_fw_dev_update_req.target_task_id = AC_TASK_FW_ID;
+		gateway_fw_dev_update_req.target_task_id = GW_TASK_FW_ID;
 		gateway_fw_dev_update_req.target_if_type = IF_TYPE_RF24_AC;
 
 		ak_msg_t* s_msg = get_dynamic_msg();

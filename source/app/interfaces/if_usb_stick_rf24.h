@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "../ak/message.h"
+#include "message.h"
 
 #include "app.h"
 #include "app_data.h"

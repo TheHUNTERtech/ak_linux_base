@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../driver/rc-switch/RCSwitch.h"
+#include "RCSwitch.h"
 
-#include "../ak/ak.h"
+#include "ak.h"
 
 #include "app.h"
 #include "app_dbg.h"

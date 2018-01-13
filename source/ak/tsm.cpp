@@ -7,7 +7,7 @@
 
 #include "ak.h"
 #include "message.h"
-#include "../sys/sys_dbg.h"
+#include "sys_dbg.h"
 
 void tsm_init(tsm_tbl_t* tsm_tbl, tsm_t** tbl, tsm_state_t state) {
 	if (tsm_tbl == (tsm_tbl_t*)0) {

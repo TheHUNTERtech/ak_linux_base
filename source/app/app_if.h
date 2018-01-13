@@ -13,7 +13,7 @@ extern "C"
 {
 #endif
 
-#include "../ak/ak.h"
+#include "ak.h"
 
 /*****************************************************************************/
 /* FIRMWARE task define
@@ -137,6 +137,34 @@ enum {
 	AC_DBG_TEST_1 = AK_USER_DEFINE_SIG,
 	AC_DBG_TEST_2,
 	AC_DBG_TEST_3
+};
+
+
+/* define signal */
+enum {
+	/* public */
+	AC_LINK_PHY_INIT = AK_USER_DEFINE_SIG,
+	AC_LINK_PHY_FRAME_SEND_REQ,
+
+	/* private */
+	AC_LINK_PHY_FRAME_SEND,
+	AC_LINK_PHY_FRAME_SEND_DONE,
+	AC_LINK_PHY_FRAME_SEND_TO,
+	AC_LINK_PHY_FRAME_SEND_MAX_RETRY,
+	AC_LINK_PHY_FRAME_REV,
+	AC_LINK_PHY_FRAME_REV_TO,
+	AC_LINK_PHY_FRAME_REV_CS_ERR,
+};
+
+/*****************************************************************************/
+/*  LINK_MAC task define
+ */
+/*****************************************************************************/
+/* private define */
+/* define timer */
+/* define signal */
+enum {
+	AC_LINK_MAC_INIT = AK_USER_DEFINE_SIG,
 };
 
 #ifdef __cplusplus

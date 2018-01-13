@@ -8,8 +8,8 @@
 #include <ctime>
 #include <string>
 
-#include "../ak/ak.h"
-#include "../ak/timer.h"
+#include "ak.h"
+#include "timer.h"
 
 #include "app.h"
 #include "app_if.h"

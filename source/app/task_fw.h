@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string>
 
-#include "../ak/message.h"
+#include "message.h"
 
 #define DEV_BIN_PATH_MAX_LEN			1024
 

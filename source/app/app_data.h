@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string>
 
-#include "../sys/sys_boot.h"
+#include "sys_boot.h"
 
 using namespace std;
 

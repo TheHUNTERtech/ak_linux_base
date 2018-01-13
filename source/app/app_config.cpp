@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../common/base64.h"
+#include "base64.h"
 
 #include "app.h"
 #include "app_dbg.h"

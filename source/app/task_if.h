@@ -1,7 +1,7 @@
 #ifndef __TASK_IF_H__
 #define __TASK_IF_H__
 
-#include "../ak/message.h"
+#include "message.h"
 
 #define IF_RF24_ENABLE				0
 #define IF_USB_RF24_ENABLE			1

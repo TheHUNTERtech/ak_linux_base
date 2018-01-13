@@ -18,9 +18,9 @@
 #include "ak_dbg.h"
 #include "message.h"
 
-#include "../sys/sys_dbg.h"
+#include "sys_dbg.h"
 
-#include "../app/task_list.h"
+#include "task_list.h"
 
 static uint32_t ak_thread_table_len = 0;
 
@@ -346,6 +346,28 @@ void get_data_common_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 	}
 }
 
+uint8_t* get_data_common_msg(ak_msg_t* msg) {
+	uint8_t* ret = NULL;
+	if (msg != NULL) {
+		if (msg->header->type == COMMON_MSG_TYPE) {
+			if (msg->header->payload == NULL) {
+				FATAL("AK", 0x0F);
+			}
+			else {
+				ret = (uint8_t*)msg->header->payload;
+				AK_MSG_DBG("[MSG] get payload:%p\n", msg->header->payload);
+			}
+		}
+		else {
+			FATAL("AK", 0x10);
+		}
+	}
+	else {
+		FATAL("AK", 0x11);
+	}
+	return ret;
+}
+
 uint8_t get_data_len_common_msg(ak_msg_t* msg) {
 	uint8_t ret = 0;
 	if (msg != NULL) {
@@ -453,6 +475,10 @@ void task_post_pure_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig
 	task_post(task_dst_id, s_msg);
 }
 
+void task_post_pure_msg(uint32_t task_dst_id, uint32_t sig) {
+	task_post_pure_msg(task_dst_id, task_dst_id, sig);
+}
+
 void task_post_common_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len) {
 	ak_msg_t* s_msg = get_common_msg();
 	set_msg_sig(s_msg, sig);
@@ -461,12 +487,20 @@ void task_post_common_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t s
 	task_post(task_dst_id, s_msg);
 }
 
+void task_post_common_msg(uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len) {
+	task_post_common_msg(task_dst_id, task_dst_id, sig, data, len);
+}
+
 void task_post_dynamic_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len) {
 	ak_msg_t* s_msg = get_dynamic_msg();
 	set_msg_sig(s_msg, sig);
 	set_data_dynamic_msg(s_msg, data, len);
 	set_msg_src_task_id(s_msg, task_src_id);
 	task_post(task_dst_id, s_msg);
+}
+
+void task_post_dynamic_msg(uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len) {
+	task_post_dynamic_msg(task_dst_id, task_dst_id, sig, data, len);
 }
 
 bool msg_available(uint32_t des_task_id) {

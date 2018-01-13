@@ -7,9 +7,9 @@
 #include <pthread.h>
 #include <sys/un.h>
 
-#include "../ak/ak.h"
+#include "ak.h"
 
-#include "../sys/sys_dbg.h"
+#include "sys_dbg.h"
 
 #include "app.h"
 #include "app_if.h"

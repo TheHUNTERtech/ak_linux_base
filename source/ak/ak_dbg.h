@@ -9,7 +9,7 @@
 #define __AK_DBG_H__
 
 #include <stdio.h>
-#include "../sys/sys_dbg.h"
+#include "sys_dbg.h"
 
 #define AK_MSG_DBG_EN				0
 #define AK_TIMER_DBG_EN				0

@@ -7,7 +7,7 @@ extern "C"
 #endif
 
 #include <stdint.h>
-#include "../ak/port.h"
+#include "port.h"
 
 #define SYS_BOOT_OK							0x00
 #define SYS_BOOT_NG							0x01

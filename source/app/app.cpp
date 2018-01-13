@@ -1,7 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "../ak/ak.h"
+#include "ak.h"
 
 #include "app.h"
 #include "app_dbg.h"

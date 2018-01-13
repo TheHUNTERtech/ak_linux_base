@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../ak/ak.h"
-#include "../ak/timer.h"
+#include "ak.h"
+#include "timer.h"
 
-#include "../common/cmd_line.h"
-#include "../common/base64.h"
+#include "cmd_line.h"
+#include "base64.h"
 
 #include "app.h"
 #include "app_if.h"

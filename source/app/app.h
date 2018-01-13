@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "../ak/ak.h"
+#include "ak.h"
 
 #include "app_config.h"
 
@@ -31,6 +31,21 @@ enum {
 	GW_RF24_IF_PURE_MSG_OUT = AK_USER_DEFINE_SIG,
 	GW_RF24_IF_COMMON_MSG_OUT,
 	GW_RF24_IF_TIMER_PACKET_DELAY,
+};
+
+/*****************************************************************************/
+/* task GW_IF define
+ */
+/*****************************************************************************/
+/* define timer */
+/* define signal */
+enum {
+	GW_CPU_SERIAL_IF_PURE_MSG_IN = AK_USER_DEFINE_SIG,
+	GW_CPU_SERIAL_IF_PURE_MSG_OUT,
+	GW_CPU_SERIAL_IF_COMMON_MSG_IN,
+	GW_CPU_SERIAL_IF_COMMON_MSG_OUT,
+	GW_CPU_SERIAL_IF_DYNAMIC_MSG_IN,
+	GW_CPU_SERIAL_IF_DYNAMIC_MSG_OUT,
 };
 
 /*****************************************************************************/
