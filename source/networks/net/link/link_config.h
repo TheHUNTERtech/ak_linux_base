@@ -10,6 +10,6 @@
 
 #define LINK_PHY_FRAME_SEND_TO_INTERVAL		50 /* 50 ms */
 
-#define LINK_PHY_FRAME_REV_TO_INTERVAL		10 /* 10 ms */
+#define LINK_PHY_FRAME_REV_TO_INTERVAL		25 /* 25 ms */
 
 #endif //__LINK_CONFIG_H__

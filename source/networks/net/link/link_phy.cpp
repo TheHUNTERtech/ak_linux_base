@@ -84,7 +84,10 @@ static link_phy_frame_t send_link_phy_frame;
 static link_phy_frame_t rev_link_phy_frame;
 
 /* receive frame parser state */
+static pthread_mutex_t mt_link_phy_frame_parser_state_revc;
 link_phy_frame_parser_state_e link_phy_frame_parser_state_revc;
+link_phy_frame_parser_state_e link_phy_frame_parser_state_revc_get();
+void link_phy_frame_parser_state_revc_set(link_phy_frame_parser_state_e);
 
 /* start up state-machine */
 fsm_t fsm_link_phy;
@@ -112,6 +115,8 @@ static pthread_t link_phy_rx_thread;
 static int link_phy_open_dev(const char* devpath);
 static void* link_phy_rx_thread_handler(void*);
 static void link_phy_rev_frame_parser(uint8_t* data, uint8_t len);
+static void link_phy_rev_frame_start_to();
+static void link_phy_rev_frame_clear_to();
 
 void* gw_task_link_phy_entry(void*) {
 	task_mask_started();
@@ -157,7 +162,7 @@ void* link_phy_rx_thread_handler(void*) {
 
 int link_phy_open_dev(const char* devpath) {
 	struct termios options;
-	APP_DBG("[IF CPU SERIAL][link_phy_open_dev] devpath: %s\n", devpath);
+	APP_DBG("[LINK_PHY][link_phy_open_dev] devpath: %s\n", devpath);
 
 	link_phy_fd = open(devpath, O_RDWR | O_NOCTTY | O_NDELAY);
 	if (link_phy_fd < 0) {
@@ -400,7 +405,7 @@ void fsm_link_phy_state_handle(ak_msg_t* msg) {
 
 	case GW_LINK_PHY_FRAME_REV_TO: {
 		APP_DBG_SIG("GW_LINK_PHY_FRAME_REV_TO\n");
-		link_phy_frame_parser_state_revc = PARSER_STATE_SOF;
+		link_phy_frame_parser_state_revc_set(PARSER_STATE_SOF);
 	}
 		break;
 
@@ -433,14 +438,12 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 	static uint8_t link_phy_util_index;
 	uint8_t ret_handle = LINK_HAL_HANDLED;
 
-	switch (link_phy_frame_parser_state_revc) {
+	switch (link_phy_frame_parser_state_revc_get()) {
 	case PARSER_STATE_SOF: {
 		if (LINK_PHY_SOF == c) {
 			link_phy_util_index = 3;
-			link_phy_frame_parser_state_revc = PARSER_STATE_DES_ADDR;
-#if 0
-			timer_set(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_TO, LINK_PHY_FRAME_REV_TO_INTERVAL, TIMER_ONE_SHOT);
-#endif
+			link_phy_frame_parser_state_revc_set(PARSER_STATE_DES_ADDR);
+			link_phy_rev_frame_start_to();
 		}
 		else {
 			ret_handle = LINK_HAL_IGNORED;
@@ -452,7 +455,7 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 		((uint8_t*)&rev_link_phy_frame.header.des_addr)[link_phy_util_index] = c;
 		if (link_phy_util_index == 0) {
 			link_phy_util_index = 3;
-			link_phy_frame_parser_state_revc = PARSER_STATE_SRC_ADDR;
+			link_phy_frame_parser_state_revc_set(PARSER_STATE_SRC_ADDR);
 		}
 		else {
 			link_phy_util_index--;
@@ -463,7 +466,7 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 	case PARSER_STATE_SRC_ADDR: {
 		((uint8_t*)&rev_link_phy_frame.header.src_addr)[link_phy_util_index] = c;
 		if (link_phy_util_index == 0) {
-			link_phy_frame_parser_state_revc = PARSER_STATE_TYPE;
+			link_phy_frame_parser_state_revc_set(PARSER_STATE_TYPE);
 		}
 		else {
 			link_phy_util_index--;
@@ -473,29 +476,30 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 
 	case PARSER_STATE_TYPE: {
 		rev_link_phy_frame.header.type = c;
-		link_phy_frame_parser_state_revc = PARSER_STATE_SUB_TYPE;
+		link_phy_frame_parser_state_revc_set(PARSER_STATE_SUB_TYPE);
 	}
 		break;
 
 	case PARSER_STATE_SUB_TYPE: {
 		rev_link_phy_frame.header.sub_type = c;
-		link_phy_frame_parser_state_revc = PARSER_STATE_SEQ_NUM;
+		link_phy_frame_parser_state_revc_set(PARSER_STATE_SEQ_NUM);
 	}
 		break;
 
 	case PARSER_STATE_SEQ_NUM: {
 		rev_link_phy_frame.header.seq_num = c;
-		link_phy_frame_parser_state_revc = PARSER_STATE_LEN;
+		link_phy_frame_parser_state_revc_set(PARSER_STATE_LEN);
 	}
 		break;
 
 	case PARSER_STATE_LEN: {
 		rev_link_phy_frame.header.len = c;
 		if (rev_link_phy_frame.header.len > LINK_PHY_FRAME_SIZE) {
-			link_phy_frame_parser_state_revc = PARSER_STATE_SOF;
+			link_phy_frame_parser_state_revc_set(PARSER_STATE_SOF);
 			FATAL("LK_PHY", 0x04);
 		}
-		link_phy_frame_parser_state_revc = PARSER_STATE_FCS;
+
+		link_phy_frame_parser_state_revc_set(PARSER_STATE_FCS);
 	}
 		break;
 
@@ -504,12 +508,11 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 
 		if (rev_link_phy_frame.header.len > 0) {
 			link_phy_util_index = 0;
-			link_phy_frame_parser_state_revc = PARSER_STATE_DATA;
+			link_phy_frame_parser_state_revc_set(PARSER_STATE_DATA);
 		}
 		else {
-#if 0
-			timer_remove_attr(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_TO);
-#endif
+			link_phy_rev_frame_clear_to();
+
 			uint8_t cals_cs = link_phy_frame_cals_checksum(&rev_link_phy_frame);
 
 			if (cals_cs == rev_link_phy_frame.header.fcs) {
@@ -520,7 +523,7 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 				task_post_dynamic_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_CS_ERR, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
 			}
 
-			link_phy_frame_parser_state_revc = PARSER_STATE_SOF;
+			link_phy_frame_parser_state_revc_set(PARSER_STATE_SOF);
 		}
 	}
 		break;
@@ -529,9 +532,8 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 		rev_link_phy_frame.data[link_phy_util_index++] = c;
 
 		if (link_phy_util_index == rev_link_phy_frame.header.len) {
-#if 0
-			timer_remove_attr(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_TO);
-#endif
+			link_phy_rev_frame_clear_to();
+
 			uint8_t cals_cs = link_phy_frame_cals_checksum(&rev_link_phy_frame);
 
 			if (cals_cs == rev_link_phy_frame.header.fcs) {
@@ -542,7 +544,7 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 				task_post_dynamic_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_CS_ERR, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
 			}
 
-			link_phy_frame_parser_state_revc = PARSER_STATE_SOF;
+			link_phy_frame_parser_state_revc_set(PARSER_STATE_SOF);
 		}
 	}
 		break;
@@ -553,4 +555,30 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 	}
 
 	return ret_handle;
+}
+
+void link_phy_rev_frame_start_to() {
+#if 1
+	timer_set(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_TO, LINK_PHY_FRAME_REV_TO_INTERVAL, TIMER_ONE_SHOT);
+#endif
+}
+
+void link_phy_rev_frame_clear_to() {
+#if 1
+	timer_remove_attr(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_TO);
+#endif
+}
+
+link_phy_frame_parser_state_e link_phy_frame_parser_state_revc_get() {
+	link_phy_frame_parser_state_e ret_state;
+	pthread_mutex_lock(&mt_link_phy_frame_parser_state_revc);
+	ret_state = link_phy_frame_parser_state_revc;
+	pthread_mutex_unlock(&mt_link_phy_frame_parser_state_revc);
+	return ret_state;
+}
+
+void link_phy_frame_parser_state_revc_set(link_phy_frame_parser_state_e state) {
+	pthread_mutex_lock(&mt_link_phy_frame_parser_state_revc);
+	link_phy_frame_parser_state_revc = state;
+	pthread_mutex_unlock(&mt_link_phy_frame_parser_state_revc);
 }

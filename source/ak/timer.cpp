@@ -140,13 +140,21 @@ void* timer_entry(void*) {
 
 uint32_t timer_set(uint32_t des_task_id, uint32_t sig, uint32_t duty, timer_type_t timer_type) {
 	AK_TIMER_DBG("[TIMER][timer_set] des_task_id:%d sig:%d duty:%d timer_type:%d\n", des_task_id, sig, duty, timer_type);
+
+	/* add node to timer list */
+	pthread_mutex_lock(&mt_timer_service);
+
 	timer_msg_t* timer_node_temp = timer_service.tail;
 
 	while (timer_node_temp != NULL) {
 		if (timer_node_temp->data.des_task_id == des_task_id &&
 				timer_node_temp->data.sig == sig) {
+
 			timer_node_temp->data.counter = duty;
 			AK_TIMER_DBG("[TIMER] clear counter\n");
+
+			pthread_mutex_unlock(&mt_timer_service);
+
 			return AK_RET_OK;
 		}
 		else {
@@ -157,6 +165,9 @@ uint32_t timer_set(uint32_t des_task_id, uint32_t sig, uint32_t duty, timer_type
 	timer_msg_t* timer_new = (timer_msg_t*)malloc(sizeof(timer_msg_t));
 
 	if (timer_new == NULL) {
+
+		pthread_mutex_unlock(&mt_timer_service);
+
 		FATAL("TIMER", 0x02);
 	}
 
@@ -174,13 +185,12 @@ uint32_t timer_set(uint32_t des_task_id, uint32_t sig, uint32_t duty, timer_type
 		timer_new->data.period       = (int32_t)duty;
 		break;
 
-	default:
+	default: {
+		pthread_mutex_unlock(&mt_timer_service);
 		FATAL("TIMER", 0x01);
+	}
 		break;
 	}
-
-	/* add node to timer list */
-	pthread_mutex_lock(&mt_timer_service);
 
 	if (timer_service.tail != NULL) {
 		timer_new->prev = NULL;
