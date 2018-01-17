@@ -118,19 +118,22 @@ static void link_phy_rev_frame_parser(uint8_t* data, uint8_t len);
 static void link_phy_rev_frame_start_to();
 static void link_phy_rev_frame_clear_to();
 
+static bool comport_is_opened = false;
+
 void* gw_task_link_phy_entry(void*) {
-	task_mask_started();
-	wait_all_tasks_started();
-
-	APP_DBG("[STARTED] gw_task_link_phy_entry\n");
-
 	if (link_phy_open_dev(LINK_PHY_DEV_PATH) < 0) {
 		APP_DBG("Cannot open %s !\n", LINK_PHY_DEV_PATH);
 	}
 	else {
 		APP_DBG("Opened %s success !\n", LINK_PHY_DEV_PATH);
+		comport_is_opened = true;
 		pthread_create(&link_phy_rx_thread, NULL, link_phy_rx_thread_handler, NULL);
 	}
+
+	task_mask_started();
+	wait_all_tasks_started();
+
+	APP_DBG("[STARTED] gw_task_link_phy_entry\n");
 
 	while (1) {
 		while (msg_available(GW_LINK_PHY_ID)) {
@@ -229,12 +232,14 @@ uint32_t link_phy_get_send_frame_to() {
 }
 
 void link_phy_frame_write(link_phy_frame_t* frame) {
-	/* write frame header */
-	link_phy_frame_write_block((uint8_t*)frame, sizeof(link_phy_frame_header_t));
+	if (comport_is_opened) {
+		/* write frame header */
+		link_phy_frame_write_block((uint8_t*)frame, sizeof(link_phy_frame_header_t));
 
-	/* write frame data */
-	if (frame->header.len > 0) {
-		link_phy_frame_write_block((uint8_t*)frame->data, frame->header.len);
+		/* write frame data */
+		if (frame->header.len > 0) {
+			link_phy_frame_write_block((uint8_t*)frame->data, frame->header.len);
+		}
 	}
 }
 

@@ -173,33 +173,39 @@ void* trace_task_handler(void*) {
 }
 
 void trace_msg_put(ak_msg_t* msg, uint32_t allocate, time_t time) {
-	ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)malloc(sizeof(ak_trace_msg_t));
-	ak_trace_msg->ak_trace_msg_header.type = AK_TRACE_MSG_HEADER_TYPE_PUT;
-	ak_trace_msg->ak_trace_msg_header.sub_type = AK_TRACE_MSG_HEADER_SUB_TYPE_NONE;
-	ak_trace_msg->ak_trace_msg_header.allocate = allocate;
-	ak_trace_msg->ak_trace_msg_header.time = time;
-	trace_post_msg(ak_trace_msg, msg);
-	free(ak_trace_msg);
+	if (trace_task_started) {
+		ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)malloc(sizeof(ak_trace_msg_t));
+		ak_trace_msg->ak_trace_msg_header.type = AK_TRACE_MSG_HEADER_TYPE_PUT;
+		ak_trace_msg->ak_trace_msg_header.sub_type = AK_TRACE_MSG_HEADER_SUB_TYPE_NONE;
+		ak_trace_msg->ak_trace_msg_header.allocate = allocate;
+		ak_trace_msg->ak_trace_msg_header.time = time;
+		trace_post_msg(ak_trace_msg, msg);
+		free(ak_trace_msg);
+	}
 }
 
 void trace_msg_get(ak_msg_t* msg, uint32_t allocate, time_t time) {
-	ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)malloc(sizeof(ak_trace_msg_t));
-	ak_trace_msg->ak_trace_msg_header.type = AK_TRACE_MSG_HEADER_TYPE_GET;
-	ak_trace_msg->ak_trace_msg_header.sub_type = AK_TRACE_MSG_HEADER_SUB_TYPE_NONE;
-	ak_trace_msg->ak_trace_msg_header.allocate = allocate;
-	ak_trace_msg->ak_trace_msg_header.time = time;
-	trace_post_msg(ak_trace_msg, msg);
-	free(ak_trace_msg);
+	if (trace_task_started) {
+		ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)malloc(sizeof(ak_trace_msg_t));
+		ak_trace_msg->ak_trace_msg_header.type = AK_TRACE_MSG_HEADER_TYPE_GET;
+		ak_trace_msg->ak_trace_msg_header.sub_type = AK_TRACE_MSG_HEADER_SUB_TYPE_NONE;
+		ak_trace_msg->ak_trace_msg_header.allocate = allocate;
+		ak_trace_msg->ak_trace_msg_header.time = time;
+		trace_post_msg(ak_trace_msg, msg);
+		free(ak_trace_msg);
+	}
 }
 
 void trace_msg_free(ak_msg_t* msg, uint32_t allocate, time_t time) {
-	ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)malloc(sizeof(ak_trace_msg_t));
-	ak_trace_msg->ak_trace_msg_header.type = AK_TRACE_MSG_HEADER_TYPE_FREE;
-	ak_trace_msg->ak_trace_msg_header.sub_type = AK_TRACE_MSG_HEADER_SUB_TYPE_NONE;
-	ak_trace_msg->ak_trace_msg_header.allocate = allocate;
-	ak_trace_msg->ak_trace_msg_header.time = time;
-	trace_post_msg(ak_trace_msg, msg);
-	free(ak_trace_msg);
+	if (trace_task_started) {
+		ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)malloc(sizeof(ak_trace_msg_t));
+		ak_trace_msg->ak_trace_msg_header.type = AK_TRACE_MSG_HEADER_TYPE_FREE;
+		ak_trace_msg->ak_trace_msg_header.sub_type = AK_TRACE_MSG_HEADER_SUB_TYPE_NONE;
+		ak_trace_msg->ak_trace_msg_header.allocate = allocate;
+		ak_trace_msg->ak_trace_msg_header.time = time;
+		trace_post_msg(ak_trace_msg, msg);
+		free(ak_trace_msg);
+	}
 }
 
 int trace_post_msg(ak_trace_msg_t* trace_msg, ak_msg_t* msg) {

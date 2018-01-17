@@ -60,6 +60,19 @@ int main() {
 		AK_PRINT("RET_TRACE_ERR_INIT_LISTEN\n");
 	}
 		break;
+
+	case RET_TRACE_ERR_INIT_HOST_SOCKET: {
+		AK_PRINT("RET_TRACE_ERR_INIT_HOST_SOCKET\n");
+	}
+		break;
+
+	case RET_TRACE_ERR_INIT_HOST_CONNECT: {
+		AK_PRINT("RET_TRACE_ERR_INIT_HOST_CONNECT\n");
+	}
+		break;
+
+	default:
+		break;
 	}
 
 
