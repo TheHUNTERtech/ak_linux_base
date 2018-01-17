@@ -17,6 +17,7 @@
 #include "ak.h"
 #include "ak_dbg.h"
 #include "message.h"
+#include "trace.h"
 
 #include "sys_dbg.h"
 
@@ -36,6 +37,31 @@ int main() {
 	AK_MSG_DBG("TASK LIST LEN: %d\n", ak_thread_table_len);
 
 	task_init();
+
+	uint8_t ret = trace_msg_init();
+
+	switch (ret) {
+	case RET_TRACE_OK: {
+		AK_PRINT("RET_TRACE_OK\n");
+	}
+		break;
+
+	case RET_TRACE_ERR_INIT_SOCKET: {
+		AK_PRINT("RET_TRACE_ERR_INIT_SOCKET\n");
+	}
+		break;
+
+	case RET_TRACE_ERR_INIT_BIND: {
+		AK_PRINT("RET_TRACE_ERR_INIT_BIND\n");
+	}
+		break;
+
+	case RET_TRACE_ERR_INIT_LISTEN: {
+		AK_PRINT("RET_TRACE_ERR_INIT_LISTEN\n");
+	}
+		break;
+	}
+
 
 	AK_MSG_DBG("TASK LIST LEN: %d\n", ak_thread_table_len);
 

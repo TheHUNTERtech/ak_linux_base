@@ -14,7 +14,7 @@
 #include "app_if.h"
 #include "app_dbg.h"
 #include "app_config.h"
-#include "app_cmd.h"
+#include "shell.h"
 
 #include "task_list.h"
 #include "task_list_if.h"
