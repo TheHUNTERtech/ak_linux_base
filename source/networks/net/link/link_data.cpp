@@ -39,8 +39,8 @@ void link_pdu_init() {
 }
 
 link_pdu_t* link_pdu_malloc() {
-	link_pdu_t* allocate_msg = free_link_pdu_pool;
 	pthread_mutex_lock(&mt_link_pdu_pool);
+	link_pdu_t* allocate_msg = free_link_pdu_pool;
 	if (allocate_msg == LINK_PDU_NULL) {
 		FATAL("LINK_PDU", 0x01);
 	}
@@ -56,27 +56,41 @@ link_pdu_t* link_pdu_malloc() {
 void link_pdu_free(link_pdu_t* link_pdu) {
 	SYS_DBG("[LINK_DATA] link_pdu_free(%d)\n", link_pdu->id);
 	pthread_mutex_lock(&mt_link_pdu_pool);
-	link_pdu->is_used = 0;
-	link_pdu->next = free_link_pdu_pool;
-	free_link_pdu_pool = link_pdu;
+	if (link_pdu != LINK_PDU_NULL && link_pdu->id < LINK_PDU_POOL_SIZE && link_pdu->is_used) {
+		link_pdu->is_used = 0;
+		link_pdu->next = free_link_pdu_pool;
+		free_link_pdu_pool = link_pdu;
+	}
+	else {
+		FATAL("LINK_PDU", 0x04);
+	}
 	pthread_mutex_unlock(&mt_link_pdu_pool);
 }
 
 link_pdu_t* link_pdu_get(uint32_t pdu_id) {
 	SYS_DBG("[LINK_DATA] link_pdu_get(%d)\n", pdu_id);
-	return (link_pdu_t*)&link_pdu_pool[pdu_id];
+	link_pdu_t* link_pdu = LINK_PDU_NULL;
+	pthread_mutex_lock(&mt_link_pdu_pool);
+	if (pdu_id < LINK_PDU_POOL_SIZE) {
+		link_pdu = (link_pdu_t*)&link_pdu_pool[pdu_id];
+	}
+	else {
+		FATAL("LINK_PDU", 0x03);
+	}
+	pthread_mutex_unlock(&mt_link_pdu_pool);
+	return link_pdu;
 }
 
 void link_pdu_free(uint32_t pdu_id) {
 	SYS_DBG("[LINK_DATA] link_pdu_free(%d)\n", pdu_id);
 	pthread_mutex_lock(&mt_link_pdu_pool);
-	if (pdu_id < LINK_PDU_POOL_SIZE) {
-			link_pdu_pool[pdu_id].is_used = 0;
-			link_pdu_pool[pdu_id].next = free_link_pdu_pool;
-			free_link_pdu_pool = &link_pdu_pool[pdu_id];
+	if (pdu_id < LINK_PDU_POOL_SIZE && link_pdu_pool[pdu_id].is_used) {
+		link_pdu_pool[pdu_id].is_used = 0;
+		link_pdu_pool[pdu_id].next = free_link_pdu_pool;
+		free_link_pdu_pool = &link_pdu_pool[pdu_id];
 	}
 	else {
-			FATAL("LINK_PDU", 0x02);
+		FATAL("LINK_PDU", 0x02);
 	}
 	pthread_mutex_unlock(&mt_link_pdu_pool);
 }

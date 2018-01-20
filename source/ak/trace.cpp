@@ -18,6 +18,7 @@
 
 #include "message.h"
 #include "trace.h"
+#include "ak.h"
 
 using namespace std;
 
@@ -174,7 +175,7 @@ void* trace_task_handler(void*) {
 
 void trace_msg_put(ak_msg_t* msg, uint32_t allocate, time_t time) {
 	if (trace_task_started) {
-		ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)malloc(sizeof(ak_trace_msg_t));
+		ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)ak_malloc(sizeof(ak_trace_msg_t));
 		ak_trace_msg->ak_trace_msg_header.type = AK_TRACE_MSG_HEADER_TYPE_PUT;
 		ak_trace_msg->ak_trace_msg_header.sub_type = AK_TRACE_MSG_HEADER_SUB_TYPE_NONE;
 		ak_trace_msg->ak_trace_msg_header.allocate = allocate;
@@ -186,7 +187,7 @@ void trace_msg_put(ak_msg_t* msg, uint32_t allocate, time_t time) {
 
 void trace_msg_get(ak_msg_t* msg, uint32_t allocate, time_t time) {
 	if (trace_task_started) {
-		ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)malloc(sizeof(ak_trace_msg_t));
+		ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)ak_malloc(sizeof(ak_trace_msg_t));
 		ak_trace_msg->ak_trace_msg_header.type = AK_TRACE_MSG_HEADER_TYPE_GET;
 		ak_trace_msg->ak_trace_msg_header.sub_type = AK_TRACE_MSG_HEADER_SUB_TYPE_NONE;
 		ak_trace_msg->ak_trace_msg_header.allocate = allocate;
@@ -198,7 +199,7 @@ void trace_msg_get(ak_msg_t* msg, uint32_t allocate, time_t time) {
 
 void trace_msg_free(ak_msg_t* msg, uint32_t allocate, time_t time) {
 	if (trace_task_started) {
-		ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)malloc(sizeof(ak_trace_msg_t));
+		ak_trace_msg_t* ak_trace_msg = (ak_trace_msg_t*)ak_malloc(sizeof(ak_trace_msg_t));
 		ak_trace_msg->ak_trace_msg_header.type = AK_TRACE_MSG_HEADER_TYPE_FREE;
 		ak_trace_msg->ak_trace_msg_header.sub_type = AK_TRACE_MSG_HEADER_SUB_TYPE_NONE;
 		ak_trace_msg->ak_trace_msg_header.allocate = allocate;
@@ -211,7 +212,7 @@ void trace_msg_free(ak_msg_t* msg, uint32_t allocate, time_t time) {
 int trace_post_msg(ak_trace_msg_t* trace_msg, ak_msg_t* msg) {
 	uint32_t trace_msg_len = sizeof(ak_trace_msg_header_t) + sizeof(ak_msg_header_t) + msg->header->len;
 
-	uint8_t* msg_sending_packet = (uint8_t*)malloc(trace_msg_len);
+	uint8_t* msg_sending_packet = (uint8_t*)ak_malloc(trace_msg_len);
 
 	memcpy(msg_sending_packet, &trace_msg->ak_trace_msg_header, sizeof(ak_trace_msg_header_t));
 

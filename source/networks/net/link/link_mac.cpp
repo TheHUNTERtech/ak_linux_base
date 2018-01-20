@@ -16,6 +16,7 @@
 
 #include "link_sig.h"
 #include "link_phy.h"
+#include "link_mac.h"
 
 #define LINK_PDU_ID_BUF_SIZE (LINK_PDU_POOL_SIZE * 3)
 
@@ -110,8 +111,8 @@ void fsm_link_mac_state_init(ak_msg_t* msg) {
 
 		uint32_t link_phy_get_send_frame = link_phy_get_send_frame_to();
 
-		link_mac_frame_send_to_interval = link_phy_get_send_frame + ((link_phy_get_send_frame * 3) / 10);
-		link_mac_frame_rev_to_interval = link_phy_get_send_frame + ((link_phy_get_send_frame * 3) / 10);
+		link_mac_frame_send_to_interval = 2 * link_phy_get_send_frame;
+		link_mac_frame_rev_to_interval = 2 * link_phy_get_send_frame;
 
 		/* notify complete init to higher layer */
 		task_post_pure_msg(GW_LINK_ID, GW_LINK_MAC_LAYER_STARTED);
@@ -248,8 +249,9 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 		memcpy(&link_mac_frame_rev, get_data_common_msg(msg), sizeof(link_mac_frame_t));
 
 		if (link_mac_rev_state_get() == LINK_MAC_REV_STATE_IDLE) {
-			link_mac_rev_state_set(LINK_MAC_REV_STATE_RECEIVING);
 			if (link_mac_pdu_receiving_sequence != link_mac_frame_rev.header.seq_num) {
+				link_mac_rev_state_set(LINK_MAC_REV_STATE_RECEIVING);
+
 				/* update receive pdu sequence number */
 				link_mac_pdu_receiving_sequence = link_mac_frame_rev.header.seq_num;
 
@@ -269,12 +271,11 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 						 link_mac_rev_state_get() == LINK_MAC_REV_STATE_RECEIVING) {
 
 			if (link_mac_frame_rev.header.fidx == (link_mac_frame_rev.header.fnum - 1)) { /* the last frame */
-				uint32_t rev_pdu = link_mac_pdu_receiving->id;
-				task_post_common_msg(GW_LINK_ID, GW_LINK_REV_MSG, (uint8_t*)&rev_pdu, sizeof(uint32_t));
-
+				link_mac_rev_state_set(LINK_MAC_REV_STATE_IDLE);
 				timer_remove_attr(GW_LINK_MAC_ID, GW_LINK_MAC_FRAME_REV_TO);
 
-				link_mac_rev_state_set(LINK_MAC_REV_STATE_IDLE);
+				uint32_t rev_pdu = link_mac_pdu_receiving->id;
+				task_post_common_msg(GW_LINK_ID, GW_LINK_REV_MSG, (uint8_t*)&rev_pdu, sizeof(uint32_t));
 			}
 			else {
 				timer_set(GW_LINK_MAC_ID, GW_LINK_MAC_FRAME_REV_TO, link_mac_frame_rev_to_interval, TIMER_ONE_SHOT);

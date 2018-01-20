@@ -60,6 +60,10 @@ static timer_t timer_id_1ms;
 /* internal function */
 static uint32_t timer_service_remove_node(uint32_t dst, uint32_t sig);
 
+/* timer stick counter */
+static pthread_mutex_t mt_timer_stick_counter;
+static volatile uint32_t timer_stick_counter;
+
 void timer_handler(int sig, siginfo_t *si, void *uc) {
 	timer_msg_t* timer_node_temp = timer_service.tail;
 	timer_msg_t* remove_node_mask = NULL;
@@ -67,6 +71,10 @@ void timer_handler(int sig, siginfo_t *si, void *uc) {
 	(void)si;
 	(void)uc;
 	(void)sig;
+
+	pthread_mutex_lock(&mt_timer_stick_counter);
+	timer_stick_counter++;
+	pthread_mutex_unlock(&mt_timer_stick_counter);
 
 	pthread_mutex_lock(&mt_timer_service);
 
@@ -261,4 +269,12 @@ uint32_t timer_service_remove_node(uint32_t dst, uint32_t sig) {
 	}
 
 	return AK_RET_NG;
+}
+
+uint32_t timer_stick_get() {
+	uint32_t ret;
+	pthread_mutex_lock(&mt_timer_stick_counter);
+	ret = timer_stick_counter;
+	pthread_mutex_unlock(&mt_timer_stick_counter);
+	return ret;
 }

@@ -62,7 +62,7 @@ $(OBJ_DIR)/$(NAME_MODULE): $(OBJ)
 
 .PHONY: copy
 copy:
-	scp -r ./* pi@192.168.168.144:/home/pi/workspace/ak_linux_base
+	scp -r ./* root@10.42.0.209:/root/workspace/development/ak_linux_base/
 
 .PHONY: flash
 flash:

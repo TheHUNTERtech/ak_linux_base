@@ -4,7 +4,7 @@
 #include "ak.h"
 
 #define LINK_PDU_BUF_SIZE			512
-#define LINK_PDU_POOL_SIZE			3
+#define LINK_PDU_POOL_SIZE			5
 
 #define LINK_PHY_FRAME_DATA_SIZE	AK_COMMON_MSG_DATA_SIZE
 

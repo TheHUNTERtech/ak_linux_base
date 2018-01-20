@@ -161,6 +161,7 @@ extern int get_task_id();
 *******************************************************************************/
 extern uint32_t timer_set(uint32_t des_task_id, uint32_t sig, uint32_t duty, timer_type_t timer_type);
 extern uint32_t timer_remove_attr(uint32_t des_task_id, uint32_t sig);
+extern uint32_t timer_stick_get();
 
 /******************************************************************************
 * fsm services
@@ -206,6 +207,12 @@ typedef struct tsm_tbl_t {
 void tsm_init(tsm_tbl_t* tsm_tbl, tsm_t** tbl, tsm_state_t state);
 void tsm_dispatch(tsm_tbl_t* tsm_tbl, ak_msg_t* msg);
 void tsm_tran(tsm_tbl_t* tsm_tbl, tsm_state_t state);
+
+/******************************************************************************
+* ak malloc services
+*
+*******************************************************************************/
+extern void* ak_malloc (size_t size);
 
 #ifdef __cplusplus
 }

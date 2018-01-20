@@ -25,8 +25,10 @@
 
 static uint32_t ak_thread_table_len = 0;
 
-static pthread_mutex_t ak_thread_mt_started;
+static pthread_mutex_t mt_ak_thread_started;
 static uint32_t ak_thread_started = 0;
+
+static pthread_mutex_t mt_ak_malloc;
 
 static void ak_mutex_unlock_func(void*);
 
@@ -102,100 +104,99 @@ void ak_mutex_unlock_func(void* mt) {
 }
 
 void task_mask_started() {
-	pthread_mutex_lock(&ak_thread_mt_started);
+	pthread_mutex_lock(&mt_ak_thread_started);
 	ak_thread_started --;
-	pthread_mutex_unlock(&ak_thread_mt_started);
+	pthread_mutex_unlock(&mt_ak_thread_started);
 }
 
 void wait_all_tasks_started() {
 	uint32_t num_tasks_started;
 
-	pthread_mutex_lock(&ak_thread_mt_started);
+	pthread_mutex_lock(&mt_ak_thread_started);
 	num_tasks_started = ak_thread_started;
-	pthread_mutex_unlock(&ak_thread_mt_started);
+	pthread_mutex_unlock(&mt_ak_thread_started);
 
 	while (num_tasks_started > 0) {
-		pthread_mutex_lock(&ak_thread_mt_started);
+		pthread_mutex_lock(&mt_ak_thread_started);
 		num_tasks_started = ak_thread_started;
-		pthread_mutex_unlock(&ak_thread_mt_started);
+		pthread_mutex_unlock(&mt_ak_thread_started);
 
 		usleep(10);
 	}
 }
 
 ak_msg_t* get_pure_msg() {
-	ak_msg_t* g_msg = (ak_msg_t*)malloc(sizeof(ak_msg_t));
+	ak_msg_t* g_msg = (ak_msg_t*)ak_malloc(sizeof(ak_msg_t));
 	if (g_msg == NULL) {
 		FATAL("AK", 0x01);
 	}
 
-	g_msg->header = (header_t*)malloc(sizeof(header_t));
+	g_msg->header = (header_t*)ak_malloc(sizeof(header_t));
 	if (g_msg->header == NULL) {
 		FATAL("AK", 0x02);
 	}
 
-	g_msg->header->if_des_type = AK_APP_TYPE_IF;
-	g_msg->header->if_sig = 0xFFFFFFFF;
-	g_msg->header->if_src_task_id = 0xFFFFFFFF;
-	g_msg->header->if_des_task_id = 0xFFFFFFFF;
+	g_msg->header->if_des_type		= AK_APP_TYPE_IF;
+	g_msg->header->if_sig			= 0xFFFFFFFF;
+	g_msg->header->if_src_task_id	= 0xFFFFFFFF;
+	g_msg->header->if_des_task_id	= 0xFFFFFFFF;
 
-	g_msg->header->ref_count = 1;
-	g_msg->header->type = PURE_MSG_TYPE;
-	g_msg->header->len = 0;
-	g_msg->header->payload = NULL;
+	g_msg->header->ref_count	= 1;
+	g_msg->header->type			= PURE_MSG_TYPE;
+	g_msg->header->len			= 0;
+	g_msg->header->payload		= NULL;
 
+	AK_MSG_DBG("[MSG] get msg:%p\theader:%p\n", g_msg, g_msg->header);
 	return g_msg;
 }
 
 ak_msg_t* get_dynamic_msg() {
-	ak_msg_t* g_msg = (ak_msg_t*)malloc(sizeof(ak_msg_t));
+	ak_msg_t* g_msg = (ak_msg_t*)ak_malloc(sizeof(ak_msg_t));
 	if (g_msg == NULL) {
 		FATAL("AK", 0x02);
 	}
 
-	g_msg->header = (header_t*)malloc(sizeof(header_t));
+	g_msg->header = (header_t*)ak_malloc(sizeof(header_t));
 	if (g_msg->header == NULL) {
 		FATAL("AK", 0x03);
 	}
 
-	g_msg->header->if_des_type = AK_APP_TYPE_IF;
-	g_msg->header->if_sig = 0xFFFFFFFF;
-	g_msg->header->if_src_task_id = 0xFFFFFFFF;
-	g_msg->header->if_des_task_id = 0xFFFFFFFF;
+	g_msg->header->if_des_type		= AK_APP_TYPE_IF;
+	g_msg->header->if_sig			= 0xFFFFFFFF;
+	g_msg->header->if_src_task_id	= 0xFFFFFFFF;
+	g_msg->header->if_des_task_id	= 0xFFFFFFFF;
 
-	g_msg->header->ref_count = 1;
-	g_msg->header->type = DYNAMIC_MSG_TYPE;
-	g_msg->header->len = 0;
-	g_msg->header->payload = NULL;
+	g_msg->header->ref_count	= 1;
+	g_msg->header->type			= DYNAMIC_MSG_TYPE;
+	g_msg->header->len			= 0;
+	g_msg->header->payload		= NULL;
 
 	AK_MSG_DBG("[MSG] get msg:%p\theader:%p\n", g_msg, g_msg->header);
-
 	return g_msg;
 }
 
 ak_msg_t* get_common_msg() {
-	ak_msg_t* g_msg = (ak_msg_t*)malloc(sizeof(ak_msg_t));
+	ak_msg_t* g_msg = (ak_msg_t*)ak_malloc(sizeof(ak_msg_t));
 	if (g_msg == NULL) {
 		FATAL("AK", 0x04);
 	}
 
-	g_msg->header = (header_t*)malloc(sizeof(header_t));
+	g_msg->header = (header_t*)ak_malloc(sizeof(header_t));
 	if (g_msg->header == NULL) {
 		FATAL("AK", 0x05);
 	}
 
-	g_msg->header->if_des_type = AK_APP_TYPE_IF;
-	g_msg->header->if_sig = 0xFFFFFFFF;
-	g_msg->header->if_src_task_id = 0xFFFFFFFF;
-	g_msg->header->if_des_task_id = 0xFFFFFFFF;
+	g_msg->header->if_des_type		= AK_APP_TYPE_IF;
+	g_msg->header->if_sig			= 0xFFFFFFFF;
+	g_msg->header->if_src_task_id	= 0xFFFFFFFF;
+	g_msg->header->if_des_task_id	= 0xFFFFFFFF;
 
-	g_msg->header->ref_count = 1;
-	g_msg->header->type = COMMON_MSG_TYPE;
-	g_msg->header->len = 0;
-	g_msg->header->payload = NULL;
+	g_msg->header->ref_count	= 1;
+	g_msg->header->type			= COMMON_MSG_TYPE;
+	g_msg->header->len			= 0;
+	g_msg->header->payload		= NULL;
 
 	AK_MSG_DBG("[MSG] get msg:%p\theader:%p\n", g_msg, g_msg->header);
-
 	return g_msg;
 }
 
@@ -339,7 +340,7 @@ void set_if_data_dynamic_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 void set_data_common_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 	if (msg != NULL) {
 		if (msg->header->type == COMMON_MSG_TYPE) {
-			msg->header->payload = (uint8_t*)malloc((size_t)len);
+			msg->header->payload = (uint8_t*)ak_malloc((size_t)len);
 			if (msg->header->payload == NULL) {
 				FATAL("AK", 0x0D);
 			}
@@ -426,7 +427,7 @@ uint8_t get_data_len_common_msg(ak_msg_t* msg) {
 void set_data_dynamic_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 	if (msg != NULL) {
 		if (msg->header->type == DYNAMIC_MSG_TYPE) {
-			msg->header->payload = (uint8_t*)malloc((size_t)len);
+			msg->header->payload = (uint8_t*)ak_malloc((size_t)len);
 			if (msg->header->payload == NULL) {
 				FATAL("AK", 0x14);
 			}
@@ -621,4 +622,12 @@ int get_task_id() {
 		}
 	}
 	return -1;
+}
+
+void* ak_malloc (size_t size) {
+	void* ret = NULL;
+	pthread_mutex_lock(&mt_ak_malloc);
+	ret = malloc(size);
+	pthread_mutex_unlock(&mt_ak_malloc);
+	return ret;
 }
