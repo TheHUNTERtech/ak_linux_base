@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include "sys_dbg.h"
 
-#define APP_PRINT_EN		1
-#define APP_DBG_EN			1
+#define APP_PRINT_EN		0
+#define APP_DBG_EN			0
 #define APP_DBG_SIG_EN		1
 
 #if (APP_PRINT_EN == 1)

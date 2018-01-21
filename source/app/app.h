@@ -109,7 +109,12 @@ enum {
 /* define signal */
 enum {
 	GW_DEBUG_MSG_1 = AK_USER_DEFINE_SIG,
-	GW_DEBUG_MSG_2
+	GW_DEBUG_MSG_2,
+	GW_DEBUG_MSG_3,
+	GW_DEBUG_MSG_4,
+	GW_DEBUG_MSG_5,
+	GW_DEBUG_MSG_6,
+	GW_DEBUG_MSG_7,
 };
 
 /*****************************************************************************/

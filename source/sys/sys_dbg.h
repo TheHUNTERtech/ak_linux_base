@@ -8,6 +8,7 @@
 #define SYS_PRINT_EN		1
 #define SYS_DBG_EN			1
 #define LOG_TIME_EN			1
+#define RAW_DBG_EN			1
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
@@ -42,6 +43,12 @@
 #define SYS_DBG(fmt, ...)		__LOG__(fmt, "SYS_DBG", ##__VA_ARGS__)
 #else
 #define SYS_DBG(fmt, ...)
+#endif
+
+#if (RAW_DBG_EN == 1)
+#define RAW_DBG(fmt, ...)		printf(fmt, ##__VA_ARGS__)
+#else
+#define RAW_DBG(fmt, ...)
 #endif
 #define FATAL(s, c) sys_dbg_fatal((const char*)s, (uint8_t)c)
 

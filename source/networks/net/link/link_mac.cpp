@@ -18,7 +18,7 @@
 #include "link_phy.h"
 #include "link_mac.h"
 
-#define LINK_PDU_ID_BUF_SIZE (LINK_PDU_POOL_SIZE * 3)
+#define LINK_PDU_ID_BUF_SIZE	LINK_PDU_POOL_SIZE
 
 typedef enum {
 	/* private */
@@ -138,7 +138,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 		}
 		else {
 			if (fifo_is_full(&link_pdu_id_fifo)) {
-				FATAL("link", 0x03);
+				FATAL("LINK_MAC", 0x03);
 			}
 			else {
 				fifo_put(&link_pdu_id_fifo, (uint8_t*)&pdu_id);
@@ -173,7 +173,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 			link_mac_frame_send_req();
 		}
 		else {
-			FATAL("link_mac", 0x04);
+			FATAL("LINK_MAC", 0x04);
 		}
 	}
 		break;
@@ -358,7 +358,7 @@ void link_mac_frame_send_req() {
 		timer_set(GW_LINK_MAC_ID, GW_LINK_MAC_FRAME_SEND_TO, link_mac_frame_send_to_interval, TIMER_ONE_SHOT);
 	}
 	else {
-		FATAL("link_mac", 0x01);
+		FATAL("LINK_MAC", 0x01);
 	}
 }
 

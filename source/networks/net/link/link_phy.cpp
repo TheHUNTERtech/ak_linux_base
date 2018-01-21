@@ -202,7 +202,7 @@ int link_phy_open_dev(const char* devpath) {
 void link_phy_rev_frame_parser(uint8_t* data, uint8_t len) {
 	for (uint32_t i = 0; i < len; i++) {
 		if (gw_link_phy_frame_rev_byte(*(data + i)) == LINK_HAL_IGNORED) {
-			printf("%c", *(data + i));
+			RAW_DBG("%c", *(data + i));
 		}
 	}
 }

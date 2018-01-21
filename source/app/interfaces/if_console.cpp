@@ -50,7 +50,7 @@ int i_get_command(unsigned char* cmd_buf) {
 		cmd_buf[index++] = c;
 		if (index > CMD_BUFFER_SIZE ) {
 			index = 0;
-			printf("ERROR: buffer overload !\n");
+			RAW_DBG("ERROR: buffer overload !\n");
 			return (-1);
 		}
 
