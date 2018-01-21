@@ -65,9 +65,6 @@ static pthread_mutex_t mt_timer_stick_counter;
 static volatile uint32_t timer_stick_counter;
 
 void timer_handler(int sig, siginfo_t *si, void *uc) {
-	timer_msg_t* timer_node_temp = timer_service.tail;
-	timer_msg_t* remove_node_mask = NULL;
-
 	(void)si;
 	(void)uc;
 	(void)sig;
@@ -77,6 +74,9 @@ void timer_handler(int sig, siginfo_t *si, void *uc) {
 	pthread_mutex_unlock(&mt_timer_stick_counter);
 
 	pthread_mutex_lock(&mt_timer_service);
+
+	timer_msg_t* remove_node_mask = NULL;
+	timer_msg_t* timer_node_temp = timer_service.tail;
 
 	while (timer_node_temp != NULL) {
 		timer_node_temp->data.counter--;
@@ -112,8 +112,10 @@ void timer_handler(int sig, siginfo_t *si, void *uc) {
 }
 
 void* timer_entry(void*) {
+	pthread_mutex_lock(&mt_timer_service);
 	timer_service.head = NULL;
 	timer_service.tail = NULL;
+	pthread_mutex_unlock(&mt_timer_service);
 
 	/* configure timer */
 	struct sigevent sev;
