@@ -208,12 +208,6 @@ void tsm_init(tsm_tbl_t* tsm_tbl, tsm_t** tbl, tsm_state_t state);
 void tsm_dispatch(tsm_tbl_t* tsm_tbl, ak_msg_t* msg);
 void tsm_tran(tsm_tbl_t* tsm_tbl, tsm_state_t state);
 
-/******************************************************************************
-* ak malloc services
-*
-*******************************************************************************/
-extern void* ak_malloc (size_t size);
-
 #ifdef __cplusplus
 }
 #endif

@@ -28,10 +28,6 @@ static uint32_t ak_thread_table_len = 0;
 static pthread_mutex_t mt_ak_thread_started;
 static uint32_t ak_thread_started = 0;
 
-static pthread_mutex_t mt_ak_malloc;
-
-static void ak_mutex_unlock_func(void*);
-
 int main() {
 	ak_thread_table_len = AK_TASK_LIST_LEN;
 	ak_thread_started = ak_thread_table_len;
@@ -99,10 +95,6 @@ int main() {
 	return 0;
 }
 
-void ak_mutex_unlock_func(void* mt) {
-	pthread_mutex_unlock(&((ak_task_t*)mt)->mt_mailbox_cond);
-}
-
 void task_mask_started() {
 	pthread_mutex_lock(&mt_ak_thread_started);
 	ak_thread_started --;
@@ -126,12 +118,12 @@ void wait_all_tasks_started() {
 }
 
 ak_msg_t* get_pure_msg() {
-	ak_msg_t* g_msg = (ak_msg_t*)ak_malloc(sizeof(ak_msg_t));
+	ak_msg_t* g_msg = (ak_msg_t*)malloc(sizeof(ak_msg_t));
 	if (g_msg == NULL) {
 		FATAL("AK", 0x01);
 	}
 
-	g_msg->header = (header_t*)ak_malloc(sizeof(header_t));
+	g_msg->header = (header_t*)malloc(sizeof(header_t));
 	if (g_msg->header == NULL) {
 		FATAL("AK", 0x02);
 	}
@@ -151,12 +143,12 @@ ak_msg_t* get_pure_msg() {
 }
 
 ak_msg_t* get_dynamic_msg() {
-	ak_msg_t* g_msg = (ak_msg_t*)ak_malloc(sizeof(ak_msg_t));
+	ak_msg_t* g_msg = (ak_msg_t*)malloc(sizeof(ak_msg_t));
 	if (g_msg == NULL) {
 		FATAL("AK", 0x02);
 	}
 
-	g_msg->header = (header_t*)ak_malloc(sizeof(header_t));
+	g_msg->header = (header_t*)malloc(sizeof(header_t));
 	if (g_msg->header == NULL) {
 		FATAL("AK", 0x03);
 	}
@@ -176,12 +168,12 @@ ak_msg_t* get_dynamic_msg() {
 }
 
 ak_msg_t* get_common_msg() {
-	ak_msg_t* g_msg = (ak_msg_t*)ak_malloc(sizeof(ak_msg_t));
+	ak_msg_t* g_msg = (ak_msg_t*)malloc(sizeof(ak_msg_t));
 	if (g_msg == NULL) {
 		FATAL("AK", 0x04);
 	}
 
-	g_msg->header = (header_t*)ak_malloc(sizeof(header_t));
+	g_msg->header = (header_t*)malloc(sizeof(header_t));
 	if (g_msg->header == NULL) {
 		FATAL("AK", 0x05);
 	}
@@ -340,7 +332,7 @@ void set_if_data_dynamic_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 void set_data_common_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 	if (msg != NULL) {
 		if (msg->header->type == COMMON_MSG_TYPE) {
-			msg->header->payload = (uint8_t*)ak_malloc((size_t)len);
+			msg->header->payload = (uint8_t*)malloc((size_t)len);
 			if (msg->header->payload == NULL) {
 				FATAL("AK", 0x0D);
 			}
@@ -427,7 +419,7 @@ uint8_t get_data_len_common_msg(ak_msg_t* msg) {
 void set_data_dynamic_msg(ak_msg_t* msg, uint8_t* data, uint32_t len) {
 	if (msg != NULL) {
 		if (msg->header->type == DYNAMIC_MSG_TYPE) {
-			msg->header->payload = (uint8_t*)ak_malloc((size_t)len);
+			msg->header->payload = (uint8_t*)malloc((size_t)len);
 			if (msg->header->payload == NULL) {
 				FATAL("AK", 0x14);
 			}
@@ -485,23 +477,20 @@ uint8_t get_data_len_dynamic_msg(ak_msg_t* msg) {
 }
 
 void task_post(uint32_t task_dst_id, ak_msg_t* msg) {
-
 	if (task_dst_id >= ak_thread_table_len) {
 		FATAL("AK", 0x1A);
 	}
 
-	q_msg_t* q_msg = task_list[task_dst_id].mailbox;
-
 	if (msg != NULL) {
-		msg->header->des_task_id = task_dst_id;
-
-		pthread_cleanup_push(ak_mutex_unlock_func, &task_list[task_dst_id]);
 		pthread_mutex_lock(&(task_list[task_dst_id].mt_mailbox_cond));
 
+		msg->header->des_task_id = task_dst_id;
+		q_msg_t* q_msg = task_list[task_dst_id].mailbox;
 		q_msg_put(q_msg, msg);
 
 		pthread_cond_signal(&(task_list[task_dst_id].mailbox_cond));
-		pthread_cleanup_pop((int)1);
+
+		pthread_mutex_unlock(&(task_list[task_dst_id].mt_mailbox_cond));
 	}
 	else {
 		FATAL("AK", 0x1B);
@@ -548,21 +537,14 @@ bool msg_available(uint32_t des_task_id) {
 		FATAL("AK", 0x1C);
 	}
 
-	q_msg_t* q_msg = task_list[des_task_id].mailbox;
-
-	pthread_cleanup_push(ak_mutex_unlock_func, &task_list[des_task_id]);
 	pthread_mutex_lock(&(task_list[des_task_id].mt_mailbox_cond));
 
+	q_msg_t* q_msg = task_list[des_task_id].mailbox;
 	if (q_msg->len == 0) {
-		while (q_msg->len == 0) {
 			pthread_cond_wait(&(task_list[des_task_id].mailbox_cond), &(task_list[des_task_id].mt_mailbox_cond));
-		}
-	}
-	else {
-		/* queue message available */
 	}
 
-	pthread_cleanup_pop((int)1);
+	pthread_mutex_unlock(&(task_list[des_task_id].mt_mailbox_cond));
 
 	return q_msg_available(q_msg);
 }
@@ -572,7 +554,11 @@ ak_msg_t* rev_msg(uint32_t des_task_id) {
 		FATAL("AK", 0x1D);
 	}
 
+	pthread_mutex_lock(&(task_list[des_task_id].mt_mailbox_cond));
+
 	q_msg_t* q_msg = task_list[des_task_id].mailbox;
+
+	pthread_mutex_unlock(&(task_list[des_task_id].mt_mailbox_cond));
 
 	return q_msg_get(q_msg);
 }
@@ -601,7 +587,6 @@ uint32_t get_msg_type(ak_msg_t* msg) {
 }
 
 void free_msg(ak_msg_t* msg) {
-
 	msg_dec_ref_count(msg);
 
 	if (get_msg_ref_count(msg) == 0) {
@@ -622,12 +607,4 @@ int get_task_id() {
 		}
 	}
 	return -1;
-}
-
-void* ak_malloc (size_t size) {
-	void* ret = NULL;
-	pthread_mutex_lock(&mt_ak_malloc);
-	ret = malloc(size);
-	pthread_mutex_unlock(&mt_ak_malloc);
-	return ret;
 }
