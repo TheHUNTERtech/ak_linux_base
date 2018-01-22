@@ -28,6 +28,8 @@ static uint32_t ak_thread_table_len = 0;
 static pthread_mutex_t mt_ak_thread_started;
 static uint32_t ak_thread_started = 0;
 
+static pthread_mutex_t mt_free_msg;
+
 int main() {
 	ak_thread_table_len = AK_TASK_LIST_LEN;
 	ak_thread_started = ak_thread_table_len;
@@ -541,7 +543,7 @@ bool msg_available(uint32_t des_task_id) {
 
 	q_msg_t* q_msg = task_list[des_task_id].mailbox;
 	if (q_msg->len == 0) {
-			pthread_cond_wait(&(task_list[des_task_id].mailbox_cond), &(task_list[des_task_id].mt_mailbox_cond));
+		pthread_cond_wait(&(task_list[des_task_id].mailbox_cond), &(task_list[des_task_id].mt_mailbox_cond));
 	}
 
 	pthread_mutex_unlock(&(task_list[des_task_id].mt_mailbox_cond));
@@ -587,6 +589,8 @@ uint32_t get_msg_type(ak_msg_t* msg) {
 }
 
 void free_msg(ak_msg_t* msg) {
+	pthread_mutex_lock(&mt_free_msg);
+
 	msg_dec_ref_count(msg);
 
 	if (get_msg_ref_count(msg) == 0) {
@@ -594,9 +598,12 @@ void free_msg(ak_msg_t* msg) {
 			q_msg_free(msg);
 		}
 		else {
+			pthread_mutex_unlock(&mt_free_msg);
 			FATAL("AK", 0x20);
 		}
 	}
+
+	pthread_mutex_unlock(&mt_free_msg);
 }
 
 int get_task_id() {
