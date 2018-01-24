@@ -98,6 +98,7 @@ typedef struct {
 extern ak_msg_t* get_pure_msg();
 extern ak_msg_t* get_dynamic_msg();
 extern ak_msg_t* get_common_msg();
+extern uint32_t get_msg_type(ak_msg_t* msg);
 extern ak_msg_t* ak_memcpy_msg(ak_msg_t* src);
 extern void ak_free_msg(ak_msg_t* msg);
 
@@ -130,15 +131,8 @@ extern void task_post_common_msg(uint32_t task_dst_id, uint32_t sig, uint8_t* da
 extern void task_post_dynamic_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len);
 extern void task_post_dynamic_msg(uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len);
 
-extern bool msg_available(uint32_t des_task_id);
-extern ak_msg_t* rev_msg(uint32_t des_task_id);
-
-extern void msg_inc_ref_count(ak_msg_t* msg);
-extern void msg_dec_ref_count(ak_msg_t* msg);
-extern uint32_t get_msg_ref_count(ak_msg_t* msg);
-extern uint32_t get_msg_type(ak_msg_t* msg);
-
-extern void free_msg(ak_msg_t* msg);
+extern ak_msg_t* msg_get(uint32_t des_task_id);
+extern void msg_free(ak_msg_t* msg);
 
 /******************************************************************************
 * task function
@@ -146,9 +140,6 @@ extern void free_msg(ak_msg_t* msg);
 *******************************************************************************/
 /* function is called before create threads */
 extern void task_init();
-
-/* function is call when task entry, to mask that current task is started. */
-extern void task_mask_started();
 
 /* function using to make sure that all task is initialed */
 extern void wait_all_tasks_started();

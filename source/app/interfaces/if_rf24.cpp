@@ -59,7 +59,6 @@ void* gw_task_if_rf24_entry(void*) {
 	fifo_init(&send_common_fifo, send_common_fifo_buffer, SEND_FIFO_BUFFER_SIZE, sizeof(ak_msg_common_if_t));
 	fifo_init(&send_pure_fifo, send_pure_fifo_buffer, SEND_FIFO_BUFFER_SIZE, sizeof(ak_msg_pure_if_t));
 
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_if_rf24_entry\n");
@@ -155,7 +154,7 @@ void* gw_task_if_rf24_entry(void*) {
 
 		while (msg_available(GW_TASK_IF_RF24_ID)) {
 			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_IF_RF24_ID);
+			ak_msg_t* msg = msg_get(GW_TASK_IF_RF24_ID);
 
 			/* handler message */
 			switch (msg->header->sig) {
@@ -259,7 +258,7 @@ void* gw_task_if_rf24_entry(void*) {
 			}
 
 			/* free message */
-			free_msg(msg);
+			msg_free(msg);
 		}
 
 		usleep(100);

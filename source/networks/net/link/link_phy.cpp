@@ -130,21 +130,20 @@ void* gw_task_link_phy_entry(void*) {
 		pthread_create(&link_phy_rx_thread, NULL, link_phy_rx_thread_handler, NULL);
 	}
 
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_link_phy_entry\n");
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_LINK_PHY_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_LINK_PHY_ID);
+		/* get messge */
+		msg = msg_get(GW_LINK_PHY_ID);
 
-			fsm_dispatch(&fsm_link_phy, msg);
+		fsm_dispatch(&fsm_link_phy, msg);
 
-			/* free message */
-			free_msg(msg);
-		}
+		/* free message */
+		msg_free(msg);
 	}
 }
 

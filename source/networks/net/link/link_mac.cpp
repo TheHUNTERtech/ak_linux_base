@@ -268,7 +268,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 		}
 
 		if (link_mac_pdu_receiving_sequence == link_mac_frame_rev.header.seq_num &&
-						 link_mac_rev_state_get() == LINK_MAC_REV_STATE_RECEIVING) {
+				link_mac_rev_state_get() == LINK_MAC_REV_STATE_RECEIVING) {
 
 			if (link_mac_frame_rev.header.fidx == (link_mac_frame_rev.header.fnum - 1)) { /* the last frame */
 				link_mac_rev_state_set(LINK_MAC_REV_STATE_IDLE);
@@ -366,20 +366,19 @@ void link_mac_frame_send_req() {
 q_msg_t gw_task_link_mac_mailbox;
 
 void* gw_task_link_mac_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_link_mac_entry\n");
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_LINK_MAC_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_LINK_MAC_ID);
+		/* get messge */
+		msg = msg_get(GW_LINK_MAC_ID);
 
-			task_link_mac(msg);
+		task_link_mac(msg);
 
-			/* free message */
-			free_msg(msg);
-		}
+		/* free message */
+		msg_free(msg);
 	}
 }

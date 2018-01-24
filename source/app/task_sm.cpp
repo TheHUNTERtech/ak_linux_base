@@ -19,19 +19,18 @@
 q_msg_t gw_task_sm_mailbox;
 
 void* gw_task_sm_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_sm_entry\n");
 
-	while (1) {
-		while (msg_available(GW_TASK_SM_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_SM_ID);
+	ak_msg_t* msg;
 
-			/* free message */
-			free_msg(msg);
-		}
+	while (1) {
+		/* get messge */
+		msg = msg_get(GW_TASK_SM_ID);
+
+		/* free message */
+		msg_free(msg);
 	}
 
 	return (void*)0;

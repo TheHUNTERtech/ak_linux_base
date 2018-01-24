@@ -18,25 +18,24 @@
 q_msg_t gw_task_pub_sub_mailbox;
 
 void* gw_task_pub_sub_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_pub_sub_entry\n");
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_TASK_PUB_SUB_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_PUB_SUB_ID);
+		/* get messge */
+		msg = msg_get(GW_TASK_PUB_SUB_ID);
 
-			switch (msg->header->sig) {
+		switch (msg->header->sig) {
 
-			default:
-				break;
-			}
-
-			/* free message */
-			free_msg(msg);
+		default:
+			break;
 		}
+
+		/* free message */
+		msg_free(msg);
 	}
 
 	return (void*)0;

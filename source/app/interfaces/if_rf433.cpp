@@ -21,7 +21,6 @@ q_msg_t gw_task_if_rf433_mailbox;
 RCSwitch sersor_433 = RCSwitch();
 
 void* gw_task_if_rf433_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_if_rf433_entry\n");

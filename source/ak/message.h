@@ -33,7 +33,6 @@ typedef struct {
 	/* task header */
 	uint32_t src_task_id;
 	uint32_t des_task_id;
-	uint32_t ref_count;
 	uint32_t sig;
 
 	/* external task header */

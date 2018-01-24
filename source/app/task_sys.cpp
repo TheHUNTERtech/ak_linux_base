@@ -18,30 +18,68 @@
 q_msg_t gw_task_sys_mailbox;
 
 void* gw_task_sys_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_sys_entry\n");
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_TASK_SYS_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_SYS_ID);
+		/* get messge */
+		msg = msg_get(GW_TASK_SYS_ID);
 
-			switch (msg->header->sig) {
+		switch (msg->header->sig) {
 
-			case GW_SYS_WATCH_DOG_REPORT_REQ: {
-				APP_DBG("GW_SYS_WATCH_DOG_REPORT_REQ\n");
+		case GW_SYS_WATCH_DOG_REPORT_REQ: {
+			static int gw_sys_watch_dog_report_req_count = 0;
+			if (gw_sys_watch_dog_report_req_count++ >= 1000) {
+				gw_sys_watch_dog_report_req_count = 0;
+				APP_DBG_SIG("GW_SYS_WATCH_DOG_REPORT_REQ\n");
 			}
-				break;
-
-			default:
-				break;
-			}
-
-			/* free message */
-			free_msg(msg);
 		}
+			break;
+
+		case GW_SYS_WATCH_DOG_DBG_1: {
+
+		}
+			break;
+
+		case GW_SYS_WATCH_DOG_DBG_2: {
+			ak_msg_t* s_msg = ak_memcpy_msg(msg);
+			set_msg_sig(s_msg, GW_SYS_WATCH_DOG_DBG_6);
+			set_msg_src_task_id(s_msg, GW_TASK_SYS_ID);
+			task_post(GW_TASK_SYS_ID, s_msg);
+		}
+			break;
+
+		case GW_SYS_WATCH_DOG_DBG_3: {
+			ak_msg_t* s_msg = ak_memcpy_msg(msg);
+			set_msg_sig(s_msg, GW_SYS_WATCH_DOG_DBG_5);
+			set_msg_src_task_id(s_msg, GW_TASK_SYS_ID);
+			task_post(GW_TASK_SYS_ID, s_msg);
+		}
+			break;
+
+		case GW_SYS_WATCH_DOG_DBG_4: {
+
+		}
+			break;
+
+		case GW_SYS_WATCH_DOG_DBG_5: {
+		}
+			break;
+
+		case GW_SYS_WATCH_DOG_DBG_6: {
+
+		}
+			break;
+
+		default:
+			break;
+		}
+
+		/* free message */
+		msg_free(msg);
 	}
 
 	return (void*)0;

@@ -30,66 +30,65 @@
 q_msg_t gw_task_if_cpu_serial_mailbox;
 
 void* gw_task_if_cpu_serial_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_if_cpu_serial_entry\n");
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_TASK_IF_CPU_SERIAL_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_IF_CPU_SERIAL_ID);
+		/* get messge */
+		msg = msg_get(GW_TASK_IF_CPU_SERIAL_ID);
 
-			switch (msg->header->sig) {
-			case GW_CPU_SERIAL_IF_PURE_MSG_OUT: {
-				msg_inc_ref_count(msg);
-				set_msg_sig(msg, GW_LINK_SEND_PURE_MSG);
-				task_post(GW_LINK_ID, msg);
-			}
-				break;
-
-			case GW_CPU_SERIAL_IF_COMMON_MSG_OUT: {
-				msg_inc_ref_count(msg);
-				set_msg_sig(msg, GW_LINK_SEND_COMMON_MSG);
-				task_post(GW_LINK_ID, msg);
-			}
-				break;
-
-			case GW_CPU_SERIAL_IF_DYNAMIC_MSG_OUT: {
-				msg_inc_ref_count(msg);
-				set_msg_sig(msg, GW_LINK_SEND_DYNAMIC_MSG);
-				task_post(GW_LINK_ID, msg);
-			}
-				break;
-
-			case GW_CPU_SERIAL_IF_PURE_MSG_IN: {
-				msg_inc_ref_count(msg);
-				set_msg_sig(msg, GW_IF_PURE_MSG_IN);
-				task_post(GW_TASK_IF_ID, msg);
-			}
-				break;
-
-			case GW_CPU_SERIAL_IF_COMMON_MSG_IN: {
-				msg_inc_ref_count(msg);
-				set_msg_sig(msg, GW_IF_COMMON_MSG_IN);
-				task_post(GW_TASK_IF_ID, msg);
-			}
-				break;
-
-			case GW_CPU_SERIAL_IF_DYNAMIC_MSG_IN: {
-				msg_inc_ref_count(msg);
-				set_msg_sig(msg, GW_IF_DYNAMIC_MSG_IN);
-				task_post(GW_TASK_IF_ID, msg);
-			}
-				break;
-
-			default:
-				break;
-			}
-
-			/* free message */
-			free_msg(msg);
+		switch (msg->header->sig) {
+		case GW_CPU_SERIAL_IF_PURE_MSG_OUT: {
+			ak_msg_t* s_msg = ak_memcpy_msg(msg);
+			set_msg_sig(s_msg, GW_LINK_SEND_PURE_MSG);
+			task_post(GW_LINK_ID, s_msg);
 		}
+			break;
+
+		case GW_CPU_SERIAL_IF_COMMON_MSG_OUT: {
+			ak_msg_t* s_msg = ak_memcpy_msg(msg);
+			set_msg_sig(s_msg, GW_LINK_SEND_COMMON_MSG);
+			task_post(GW_LINK_ID, s_msg);
+		}
+			break;
+
+		case GW_CPU_SERIAL_IF_DYNAMIC_MSG_OUT: {
+			ak_msg_t* s_msg = ak_memcpy_msg(msg);
+			set_msg_sig(s_msg, GW_LINK_SEND_DYNAMIC_MSG);
+			task_post(GW_LINK_ID, s_msg);
+		}
+			break;
+
+		case GW_CPU_SERIAL_IF_PURE_MSG_IN: {
+			ak_msg_t* s_msg = ak_memcpy_msg(msg);
+			set_msg_sig(s_msg, GW_IF_PURE_MSG_IN);
+			task_post(GW_TASK_IF_ID, s_msg);
+		}
+			break;
+
+		case GW_CPU_SERIAL_IF_COMMON_MSG_IN: {
+			ak_msg_t* s_msg = ak_memcpy_msg(msg);
+			set_msg_sig(s_msg, GW_IF_COMMON_MSG_IN);
+			task_post(GW_TASK_IF_ID, s_msg);
+		}
+			break;
+
+		case GW_CPU_SERIAL_IF_DYNAMIC_MSG_IN: {
+			ak_msg_t* s_msg = ak_memcpy_msg(msg);
+			set_msg_sig(s_msg, GW_IF_DYNAMIC_MSG_IN);
+			task_post(GW_TASK_IF_ID, s_msg);
+		}
+			break;
+
+		default:
+			break;
+		}
+
+		/* free message */
+		msg_free(msg);
 	}
 
 	return (void*)0;

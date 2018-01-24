@@ -98,9 +98,10 @@ void q_msg_free(ak_msg_t* msg) {
 
 uint32_t q_msg_len(q_msg_t* q_msg) {
 	uint32_t counter = 0;
-	ak_msg_t* qry_msg = q_msg->tail;
 
 	pthread_mutex_lock(&(q_msg->mt));
+
+	ak_msg_t* qry_msg = q_msg->tail;
 
 	while (qry_msg != NULL) {
 		counter ++;

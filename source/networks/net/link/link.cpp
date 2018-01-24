@@ -264,22 +264,21 @@ void* gw_task_link_entry(void*) {
 	/* init link state machine */
 	link_init_state_machine();
 
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_link_entry\n");
 
 	task_post_pure_msg(GW_LINK_ID, GW_LINK_INIT);
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_LINK_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_LINK_ID);
+		/* get messge */
+		msg = msg_get(GW_LINK_ID);
 
-			task_link(msg);
+		task_link(msg);
 
-			/* free message */
-			free_msg(msg);
-		}
+		/* free message */
+		msg_free(msg);
 	}
 }

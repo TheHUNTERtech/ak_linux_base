@@ -20,26 +20,24 @@ using namespace std;
 q_msg_t gw_task_snmp_mailbox;
 
 void* gw_task_snmp_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 	APP_DBG("[STARTED] gw_task_snmp_entry\n");
 
+	ak_msg_t* msg;
+
 	while (1) {
+		/* get messge */
+		msg = msg_get(GW_TASK_SNMP_ID);
 
-		while (msg_available(GW_TASK_SNMP_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_SNMP_ID);
+		/* handler message */
+		switch (msg->header->sig) {
 
-			/* handler message */
-			switch (msg->header->sig) {
-
-			default:
-				break;
-			}
-
-			/* free message */
-			free_msg(msg);
+		default:
+			break;
 		}
+
+		/* free message */
+		msg_free(msg);
 	}
 
 	return (void*)0;

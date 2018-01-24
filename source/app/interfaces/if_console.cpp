@@ -22,7 +22,6 @@ static unsigned char cmd_buf[CMD_BUFFER_SIZE];
 static int i_get_command(unsigned char* cmd_buf);
 
 void* gw_task_if_console_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_if_console_entry\n");

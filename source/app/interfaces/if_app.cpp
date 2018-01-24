@@ -64,68 +64,65 @@ void* gw_task_if_app_entry(void*) {
 		APP_DBG("[ERR]listen\n");
 	}
 
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] GW_task_if_app_entry\n");
 
 	pthread_create(&app_rev_thread_id, NULL, app_rev_thread_entry, NULL);
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_TASK_IF_APP_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_IF_APP_ID);
 
-			if (is_if_app_id_existed(msg->header->if_des_type)) {
-				switch (get_msg_type(msg)) {
-				case PURE_MSG_TYPE: {
-					ak_msg_pure_if_t app_if_msg;
-					memset(&app_if_msg, 0, sizeof(ak_msg_pure_if_t));
+		msg = msg_get(GW_TASK_IF_APP_ID);
 
-					/* assign if message */
-					app_if_msg.header.type = PURE_MSG_TYPE;
-					app_if_msg.header.if_src_type = IF_TYPE_APP_GW;
-					app_if_msg.header.if_des_type = msg->header->if_des_type;
-					app_if_msg.header.sig = msg->header->if_sig;
-					app_if_msg.header.src_task_id = msg->header->if_src_task_id;
-					app_if_msg.header.des_task_id = msg->header->if_des_task_id;
+		if (is_if_app_id_existed(msg->header->if_des_type)) {
+			switch (get_msg_type(msg)) {
+			case PURE_MSG_TYPE: {
+				ak_msg_pure_if_t app_if_msg;
+				memset(&app_if_msg, 0, sizeof(ak_msg_pure_if_t));
 
-					send_message_to_app(msg->header->if_des_type, (uint8_t*)&app_if_msg, sizeof(ak_msg_pure_if_t));
-				}
-					break;
+				/* assign if message */
+				app_if_msg.header.type = PURE_MSG_TYPE;
+				app_if_msg.header.if_src_type = IF_TYPE_APP_GW;
+				app_if_msg.header.if_des_type = msg->header->if_des_type;
+				app_if_msg.header.sig = msg->header->if_sig;
+				app_if_msg.header.src_task_id = msg->header->if_src_task_id;
+				app_if_msg.header.des_task_id = msg->header->if_des_task_id;
 
-				case COMMON_MSG_TYPE: {
-					ak_msg_common_if_t app_if_msg;
-					memset(&app_if_msg, 0, sizeof(ak_msg_common_if_t));
-
-					/* assign if message */
-					app_if_msg.header.type = COMMON_MSG_TYPE;
-					app_if_msg.header.if_src_type = IF_TYPE_APP_GW;
-					app_if_msg.header.if_des_type = msg->header->if_des_type;
-					app_if_msg.header.sig = msg->header->if_sig;
-					app_if_msg.header.src_task_id = msg->header->if_src_task_id;
-					app_if_msg.header.des_task_id = msg->header->if_des_task_id;
-
-					app_if_msg.len = msg->header->len;
-					get_data_common_msg(msg, app_if_msg.data, msg->header->len);
-
-					send_message_to_app(msg->header->if_des_type, (uint8_t*)&app_if_msg, sizeof(ak_msg_common_if_t));
-				}
-					break;
-
-				default:
-					break;
-				}
+				send_message_to_app(msg->header->if_des_type, (uint8_t*)&app_if_msg, sizeof(ak_msg_pure_if_t));
 			}
-			else {
-				APP_DBG("[ERR] app id does not exist !\n");
-			}
+				break;
 
-			/* free message */
-			free_msg(msg);
+			case COMMON_MSG_TYPE: {
+				ak_msg_common_if_t app_if_msg;
+				memset(&app_if_msg, 0, sizeof(ak_msg_common_if_t));
+
+				/* assign if message */
+				app_if_msg.header.type = COMMON_MSG_TYPE;
+				app_if_msg.header.if_src_type = IF_TYPE_APP_GW;
+				app_if_msg.header.if_des_type = msg->header->if_des_type;
+				app_if_msg.header.sig = msg->header->if_sig;
+				app_if_msg.header.src_task_id = msg->header->if_src_task_id;
+				app_if_msg.header.des_task_id = msg->header->if_des_task_id;
+
+				app_if_msg.len = msg->header->len;
+				get_data_common_msg(msg, app_if_msg.data, msg->header->len);
+
+				send_message_to_app(msg->header->if_des_type, (uint8_t*)&app_if_msg, sizeof(ak_msg_common_if_t));
+			}
+				break;
+
+			default:
+				break;
+			}
+		}
+		else {
+			APP_DBG("[ERR] app id does not exist !\n");
 		}
 
-		usleep(1000);
+		/* free message */
+		msg_free(msg);
 	}
 
 	return (void*)0;

@@ -67,7 +67,6 @@ int usb_stick_rf24_tx_frame_post(uint8_t* data, uint8_t len);
 static uint8_t tx_buffer[1024];
 
 void* gw_task_if_usb_stick_rf24_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_if_usb_stick_rf24_entry\n");
@@ -80,78 +79,78 @@ void* gw_task_if_usb_stick_rf24_entry(void*) {
 		pthread_create(&if_usb_stick_rf24_rx_thread, NULL, if_usb_stick_rf24_rx_thread_handler, NULL);
 	}
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_TASK_IF_USB_STICK_RF24_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_IF_USB_STICK_RF24_ID);
+		/* get messge */
+		msg = msg_get(GW_TASK_IF_USB_STICK_RF24_ID);
 
-			switch (get_msg_type(msg)) {
-			case PURE_MSG_TYPE: {
-				APP_DBG("[IF USB STICK RF24][SEND] PURE_MSG_TYPE\n");
-				ak_msg_pure_if_t app_if_msg;
+		switch (get_msg_type(msg)) {
+		case PURE_MSG_TYPE: {
+			APP_DBG("[IF USB STICK RF24][SEND] PURE_MSG_TYPE\n");
+			ak_msg_pure_if_t app_if_msg;
 
-				/* assign if message */
-				app_if_msg.header.type			= PURE_MSG_TYPE;
-				app_if_msg.header.if_src_type	= msg->header->if_src_type;
-				app_if_msg.header.if_des_type	= msg->header->if_des_type;
-				app_if_msg.header.sig			= msg->header->if_sig;
-				app_if_msg.header.src_task_id	= msg->header->if_src_task_id;
-				app_if_msg.header.des_task_id	= msg->header->if_des_task_id;
+			/* assign if message */
+			app_if_msg.header.type			= PURE_MSG_TYPE;
+			app_if_msg.header.if_src_type	= msg->header->if_src_type;
+			app_if_msg.header.if_des_type	= msg->header->if_des_type;
+			app_if_msg.header.sig			= msg->header->if_sig;
+			app_if_msg.header.src_task_id	= msg->header->if_src_task_id;
+			app_if_msg.header.des_task_id	= msg->header->if_des_task_id;
 
-				usb_stick_rf24_tx_frame_post((uint8_t*)&app_if_msg, sizeof(ak_msg_pure_if_t));
-			}
-				break;
-
-			case COMMON_MSG_TYPE: {
-				APP_DBG("[IF USB STICK RF24][SEND] COMMON_MSG_TYPE\n");
-				ak_msg_common_if_t app_if_msg;
-
-				/* assign if message */
-				app_if_msg.header.type			= COMMON_MSG_TYPE;
-				app_if_msg.header.if_src_type	= msg->header->if_src_type;
-				app_if_msg.header.if_des_type	= msg->header->if_des_type;
-				app_if_msg.header.sig			= msg->header->if_sig;
-				app_if_msg.header.src_task_id	= msg->header->if_src_task_id;
-				app_if_msg.header.des_task_id	= msg->header->if_des_task_id;
-
-				app_if_msg.len = msg->header->len;
-				get_data_common_msg(msg, app_if_msg.data, msg->header->len);
-
-				usb_stick_rf24_tx_frame_post((uint8_t*)&app_if_msg, sizeof(ak_msg_common_if_t));
-			}
-				break;
-
-			case DYNAMIC_MSG_TYPE: {
-				APP_DBG("[IF USB STICK RF24][SEND] COMMON_MSG_TYPE\n");
-				ak_msg_dynamic_if_t app_if_msg;
-				uint32_t app_if_msg_len;
-
-				/* assign if message */
-				app_if_msg.header.type			= DYNAMIC_MSG_TYPE;
-				app_if_msg.header.if_src_type	= msg->header->if_src_type;
-				app_if_msg.header.if_des_type	= msg->header->if_des_type;
-				app_if_msg.header.sig			= msg->header->if_sig;
-				app_if_msg.header.src_task_id	= msg->header->if_src_task_id;
-				app_if_msg.header.des_task_id	= msg->header->if_des_task_id;
-
-				app_if_msg.len = msg->header->len;
-				app_if_msg.data = (uint8_t*)malloc(app_if_msg.len);
-				get_data_dynamic_msg(msg, app_if_msg.data, app_if_msg.len);
-
-				app_if_msg_len = sizeof(ak_msg_if_header_t) + sizeof(uint32_t) + app_if_msg.len;
-
-				usb_stick_rf24_tx_frame_post((uint8_t*)&app_if_msg, app_if_msg_len);
-				free(app_if_msg.data);
-			}
-				break;
-
-			default:
-				break;
-			}
-
-			/* free message */
-			free_msg(msg);
+			usb_stick_rf24_tx_frame_post((uint8_t*)&app_if_msg, sizeof(ak_msg_pure_if_t));
 		}
+			break;
+
+		case COMMON_MSG_TYPE: {
+			APP_DBG("[IF USB STICK RF24][SEND] COMMON_MSG_TYPE\n");
+			ak_msg_common_if_t app_if_msg;
+
+			/* assign if message */
+			app_if_msg.header.type			= COMMON_MSG_TYPE;
+			app_if_msg.header.if_src_type	= msg->header->if_src_type;
+			app_if_msg.header.if_des_type	= msg->header->if_des_type;
+			app_if_msg.header.sig			= msg->header->if_sig;
+			app_if_msg.header.src_task_id	= msg->header->if_src_task_id;
+			app_if_msg.header.des_task_id	= msg->header->if_des_task_id;
+
+			app_if_msg.len = msg->header->len;
+			get_data_common_msg(msg, app_if_msg.data, msg->header->len);
+
+			usb_stick_rf24_tx_frame_post((uint8_t*)&app_if_msg, sizeof(ak_msg_common_if_t));
+		}
+			break;
+
+		case DYNAMIC_MSG_TYPE: {
+			APP_DBG("[IF USB STICK RF24][SEND] COMMON_MSG_TYPE\n");
+			ak_msg_dynamic_if_t app_if_msg;
+			uint32_t app_if_msg_len;
+
+			/* assign if message */
+			app_if_msg.header.type			= DYNAMIC_MSG_TYPE;
+			app_if_msg.header.if_src_type	= msg->header->if_src_type;
+			app_if_msg.header.if_des_type	= msg->header->if_des_type;
+			app_if_msg.header.sig			= msg->header->if_sig;
+			app_if_msg.header.src_task_id	= msg->header->if_src_task_id;
+			app_if_msg.header.des_task_id	= msg->header->if_des_task_id;
+
+			app_if_msg.len = msg->header->len;
+			app_if_msg.data = (uint8_t*)malloc(app_if_msg.len);
+			get_data_dynamic_msg(msg, app_if_msg.data, app_if_msg.len);
+
+			app_if_msg_len = sizeof(ak_msg_if_header_t) + sizeof(uint32_t) + app_if_msg.len;
+
+			usb_stick_rf24_tx_frame_post((uint8_t*)&app_if_msg, app_if_msg_len);
+			free(app_if_msg.data);
+		}
+			break;
+
+		default:
+			break;
+		}
+
+		/* free message */
+		msg_free(msg);
 	}
 
 	return (void*)0;

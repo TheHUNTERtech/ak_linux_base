@@ -39,43 +39,42 @@ static void usb_stick_rf24_if_forward_msg(ak_msg_t* msg);
 #endif
 
 void* gw_task_if_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_if_entry\n");
 
-	while (1) {
-		while (msg_available(GW_TASK_IF_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_IF_ID);
+	ak_msg_t* msg;
 
-			/* handler message */
-			if (msg->header->if_des_type == IF_TYPE_RF24_GW ||
-					msg->header->if_des_type == IF_TYPE_RF24_AC) {
+	while (1) {
+		/* get messge */
+		msg = msg_get(GW_TASK_IF_ID);
+
+		/* handler message */
+		if (msg->header->if_des_type == IF_TYPE_RF24_GW ||
+				msg->header->if_des_type == IF_TYPE_RF24_AC) {
 #if (IF_RF24_ENABLE == 1)
-				rf24_if_forward_msg(msg);
+			rf24_if_forward_msg(msg);
 #endif
 
 #if (IF_USB_RF24_ENABLE == 1)
-				usb_stick_rf24_if_forward_msg(msg);
+			usb_stick_rf24_if_forward_msg(msg);
 #endif
-			}
-			else if (msg->header->if_des_type == IF_TYPE_APP_GMNG ||
-					 msg->header->if_des_type == IF_TYPE_APP_GW) {
-#if (IF_APP_ENABLE == 1)
-				app_if_forward_msg(msg);
-#endif
-			}
-			else if (msg->header->if_des_type == IF_TYPE_UART_GW ||
-					 msg->header->if_des_type == IF_TYPE_UART_AC) {
-#if (IF_CPU_SERIAL_ENABLE == 1)
-				cpu_serial_if_forward_msg(msg);
-#endif
-			}
-
-			/* free message */
-			free_msg(msg);
 		}
+		else if (msg->header->if_des_type == IF_TYPE_APP_GMNG ||
+				 msg->header->if_des_type == IF_TYPE_APP_GW) {
+#if (IF_APP_ENABLE == 1)
+			app_if_forward_msg(msg);
+#endif
+		}
+		else if (msg->header->if_des_type == IF_TYPE_UART_GW ||
+				 msg->header->if_des_type == IF_TYPE_UART_AC) {
+#if (IF_CPU_SERIAL_ENABLE == 1)
+			cpu_serial_if_forward_msg(msg);
+#endif
+		}
+
+		/* free message */
+		msg_free(msg);
 	}
 
 	return (void*)0;
@@ -85,36 +84,36 @@ void* gw_task_if_entry(void*) {
 void rf24_if_forward_msg(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_IF_PURE_MSG_IN: {
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(s_msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_IN: {
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_PURE_MSG_OUT: {
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, GW_RF24_IF_PURE_MSG_OUT);
-		task_post(GW_TASK_IF_RF24_ID, msg);
+		set_msg_sig(s_msg, GW_RF24_IF_PURE_MSG_OUT);
+		task_post(GW_TASK_IF_RF24_ID, s_msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_OUT: {
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, GW_RF24_IF_COMMON_MSG_OUT);
-		task_post(GW_TASK_IF_RF24_ID, msg);
+		set_msg_sig(s_msg, GW_RF24_IF_COMMON_MSG_OUT);
+		task_post(GW_TASK_IF_RF24_ID, s_msg);
 	}
 		break;
 
@@ -129,32 +128,32 @@ void rf24_if_forward_msg(ak_msg_t* msg) {
 void app_if_forward_msg(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_IF_PURE_MSG_IN:	{
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(s_msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_IN: {
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_PURE_MSG_OUT: {
-		msg_inc_ref_count(msg);
-		task_post(GW_TASK_IF_APP_ID, msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
+		task_post(GW_TASK_IF_APP_ID, s_msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_OUT: {
-		msg_inc_ref_count(msg);
-		task_post(GW_TASK_IF_APP_ID, msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
+		task_post(GW_TASK_IF_APP_ID, s_msg);
 	}
 		break;
 
@@ -168,47 +167,47 @@ void app_if_forward_msg(ak_msg_t* msg) {
 void cpu_serial_if_forward_msg(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_IF_PURE_MSG_IN:	{
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_IN: {
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_DYNAMIC_MSG_IN: {
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_PURE_MSG_OUT: {
-		msg_inc_ref_count(msg);
-		task_post(GW_TASK_IF_CPU_SERIAL_ID, msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
+		task_post(GW_TASK_IF_CPU_SERIAL_ID, s_msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_OUT: {
-		msg_inc_ref_count(msg);
-		task_post(GW_TASK_IF_CPU_SERIAL_ID, msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
+		task_post(GW_TASK_IF_CPU_SERIAL_ID, s_msg);
 	}
 		break;
 
 	case GW_IF_DYNAMIC_MSG_OUT: {
-		msg_inc_ref_count(msg);
-		task_post(GW_TASK_IF_CPU_SERIAL_ID, msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
+		task_post(GW_TASK_IF_CPU_SERIAL_ID, s_msg);
 	}
 		break;
 
@@ -222,47 +221,47 @@ void cpu_serial_if_forward_msg(ak_msg_t* msg) {
 void usb_stick_rf24_if_forward_msg(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_IF_PURE_MSG_IN:	{
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_IN: {
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_DYNAMIC_MSG_IN: {
-		msg_inc_ref_count(msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
 
-		set_msg_sig(msg, msg->header->if_sig);
-		set_msg_src_task_id(msg, msg->header->if_src_task_id);
-		task_post(msg->header->if_des_task_id, msg);
+		set_msg_sig(s_msg, s_msg->header->if_sig);
+		set_msg_src_task_id(s_msg, s_msg->header->if_src_task_id);
+		task_post(msg->header->if_des_task_id, s_msg);
 	}
 		break;
 
 	case GW_IF_PURE_MSG_OUT: {
-		msg_inc_ref_count(msg);
-		task_post(GW_TASK_IF_USB_STICK_RF24_ID, msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
+		task_post(GW_TASK_IF_USB_STICK_RF24_ID, s_msg);
 	}
 		break;
 
 	case GW_IF_COMMON_MSG_OUT: {
-		msg_inc_ref_count(msg);
-		task_post(GW_TASK_IF_USB_STICK_RF24_ID, msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
+		task_post(GW_TASK_IF_USB_STICK_RF24_ID, s_msg);
 	}
 		break;
 
 	case GW_IF_DYNAMIC_MSG_OUT: {
-		msg_inc_ref_count(msg);
-		task_post(GW_TASK_IF_USB_STICK_RF24_ID, msg);
+		ak_msg_t* s_msg = ak_memcpy_msg(msg);
+		task_post(GW_TASK_IF_USB_STICK_RF24_ID, s_msg);
 	}
 		break;
 

@@ -37,7 +37,6 @@ typedef struct {
 	/* task header */
 	uint32_t src_task_id;
 	uint32_t des_task_id;
-	uint32_t ref_count;
 	uint32_t sig;
 
 	/* external task header */
@@ -219,7 +218,6 @@ int trace_post_msg(ak_trace_msg_t* trace_msg, ak_msg_t* msg) {
 	ak_msg_header_t st_ak_msg_header;
 	st_ak_msg_header.src_task_id = msg->header->src_task_id;
 	st_ak_msg_header.des_task_id = msg->header->des_task_id;
-	st_ak_msg_header.ref_count = msg->header->ref_count;
 	st_ak_msg_header.sig = msg->header->sig;
 	st_ak_msg_header.if_src_task_id = msg->header->if_src_task_id;
 	st_ak_msg_header.if_des_task_id = msg->header->if_des_task_id;

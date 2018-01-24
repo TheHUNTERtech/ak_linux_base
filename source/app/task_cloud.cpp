@@ -25,19 +25,18 @@ using namespace std;
 q_msg_t gw_task_cloud_mailbox;
 
 void* gw_task_cloud_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_cloud_entry\n");
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_TASK_CLOUD_ID)) {
 			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_CLOUD_ID);
+			msg = msg_get(GW_TASK_CLOUD_ID);
 
 			/* free message */
-			free_msg(msg);
-		}
+			msg_free(msg);
 	}
 
 	return (void*)0;

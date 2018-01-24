@@ -23,17 +23,12 @@
 
 #include "task_list.h"
 
-static uint32_t ak_thread_table_len = 0;
+static uint32_t ak_thread_table_len = AK_TASK_LIST_LEN;
 
 static pthread_mutex_t mt_ak_thread_started;
 static uint32_t ak_thread_started = 0;
 
-static pthread_mutex_t mt_free_msg;
-
 int main() {
-	ak_thread_table_len = AK_TASK_LIST_LEN;
-	ak_thread_started = ak_thread_table_len;
-
 	AK_MSG_DBG("TASK LIST LEN: %d\n", ak_thread_table_len);
 
 	task_init();
@@ -97,25 +92,27 @@ int main() {
 	return 0;
 }
 
-void task_mask_started() {
-	pthread_mutex_lock(&mt_ak_thread_started);
-	ak_thread_started --;
-	pthread_mutex_unlock(&mt_ak_thread_started);
-}
-
 void wait_all_tasks_started() {
-	uint32_t num_tasks_started;
+	bool check_ret = true;
 
 	pthread_mutex_lock(&mt_ak_thread_started);
-	num_tasks_started = ak_thread_started;
+	ak_thread_started++;
 	pthread_mutex_unlock(&mt_ak_thread_started);
 
-	while (num_tasks_started > 0) {
+	while (check_ret) {
+
 		pthread_mutex_lock(&mt_ak_thread_started);
-		num_tasks_started = ak_thread_started;
+
+		if (ak_thread_started < ak_thread_table_len) {
+			check_ret = true;
+		}
+		else {
+			check_ret = false;
+		}
+
 		pthread_mutex_unlock(&mt_ak_thread_started);
 
-		usleep(10);
+		usleep(100);
 	}
 }
 
@@ -135,7 +132,6 @@ ak_msg_t* get_pure_msg() {
 	g_msg->header->if_src_task_id	= 0xFFFFFFFF;
 	g_msg->header->if_des_task_id	= 0xFFFFFFFF;
 
-	g_msg->header->ref_count	= 1;
 	g_msg->header->type			= PURE_MSG_TYPE;
 	g_msg->header->len			= 0;
 	g_msg->header->payload		= NULL;
@@ -160,7 +156,6 @@ ak_msg_t* get_dynamic_msg() {
 	g_msg->header->if_src_task_id	= 0xFFFFFFFF;
 	g_msg->header->if_des_task_id	= 0xFFFFFFFF;
 
-	g_msg->header->ref_count	= 1;
 	g_msg->header->type			= DYNAMIC_MSG_TYPE;
 	g_msg->header->len			= 0;
 	g_msg->header->payload		= NULL;
@@ -185,7 +180,6 @@ ak_msg_t* get_common_msg() {
 	g_msg->header->if_src_task_id	= 0xFFFFFFFF;
 	g_msg->header->if_des_task_id	= 0xFFFFFFFF;
 
-	g_msg->header->ref_count	= 1;
 	g_msg->header->type			= COMMON_MSG_TYPE;
 	g_msg->header->len			= 0;
 	g_msg->header->payload		= NULL;
@@ -534,24 +528,9 @@ void task_post_dynamic_msg(uint32_t task_dst_id, uint32_t sig, uint8_t* data, ui
 	task_post_dynamic_msg(task_dst_id, task_dst_id, sig, data, len);
 }
 
-bool msg_available(uint32_t des_task_id) {
-	if (des_task_id >= AK_TASK_LIST_LEN) {
-		FATAL("AK", 0x1C);
-	}
+ak_msg_t* msg_get(uint32_t des_task_id) {
+	ak_msg_t* ret_msg = AK_MSG_NULL;
 
-	pthread_mutex_lock(&(task_list[des_task_id].mt_mailbox_cond));
-
-	q_msg_t* q_msg = task_list[des_task_id].mailbox;
-	if (q_msg->len == 0) {
-		pthread_cond_wait(&(task_list[des_task_id].mailbox_cond), &(task_list[des_task_id].mt_mailbox_cond));
-	}
-
-	pthread_mutex_unlock(&(task_list[des_task_id].mt_mailbox_cond));
-
-	return q_msg_available(q_msg);
-}
-
-ak_msg_t* rev_msg(uint32_t des_task_id) {
 	if (des_task_id >= AK_TASK_LIST_LEN) {
 		FATAL("AK", 0x1D);
 	}
@@ -560,50 +539,30 @@ ak_msg_t* rev_msg(uint32_t des_task_id) {
 
 	q_msg_t* q_msg = task_list[des_task_id].mailbox;
 
+	if (q_msg->len == 0) {
+		pthread_cond_wait(&(task_list[des_task_id].mailbox_cond), &(task_list[des_task_id].mt_mailbox_cond));
+	}
+
+	if (q_msg_available(q_msg)) {
+		ret_msg = q_msg_get(q_msg);
+	}
+
 	pthread_mutex_unlock(&(task_list[des_task_id].mt_mailbox_cond));
 
-	return q_msg_get(q_msg);
-}
-
-void msg_inc_ref_count(ak_msg_t* msg) {
-	if (msg->header->ref_count++ > MAX_MSG_REF_COUNT) {
-		FATAL("AK", 0x1E);
-	}
-}
-
-void msg_dec_ref_count(ak_msg_t* msg) {
-	if (msg->header->ref_count > 0) {
-		msg->header->ref_count--;
-	}
-	else {
-		FATAL("AK", 0x1F);
-	}
-}
-
-uint32_t get_msg_ref_count(ak_msg_t* msg) {
-	return msg->header->ref_count;
+	return ret_msg;
 }
 
 uint32_t get_msg_type(ak_msg_t* msg) {
 	return msg->header->type;
 }
 
-void free_msg(ak_msg_t* msg) {
-	pthread_mutex_lock(&mt_free_msg);
-
-	msg_dec_ref_count(msg);
-
-	if (get_msg_ref_count(msg) == 0) {
-		if (msg) {
-			q_msg_free(msg);
-		}
-		else {
-			pthread_mutex_unlock(&mt_free_msg);
-			FATAL("AK", 0x20);
-		}
+void msg_free(ak_msg_t* msg) {
+	if (msg) {
+		q_msg_free(msg);
 	}
-
-	pthread_mutex_unlock(&mt_free_msg);
+	else {
+		FATAL("AK", 0x20);
+	}
 }
 
 int get_task_id() {

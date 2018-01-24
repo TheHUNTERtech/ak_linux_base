@@ -18,25 +18,25 @@
 q_msg_t gw_task_sensor_mailbox;
 
 void* gw_task_sensor_entry(void*) {
-	task_mask_started();
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_sensor_entry\n");
 
+	ak_msg_t* msg;
+
 	while (1) {
-		while (msg_available(GW_TASK_SENSOR_ID)) {
-			/* get messge */
-			ak_msg_t* msg = rev_msg(GW_TASK_SENSOR_ID);
 
-			switch (msg->header->sig) {
+		/* get messge */
+		msg = msg_get(GW_TASK_SENSOR_ID);
 
-			default:
-				break;
-			}
+		switch (msg->header->sig) {
 
-			/* free message */
-			free_msg(msg);
+		default:
+			break;
 		}
+
+		/* free message */
+		msg_free(msg);
 	}
 
 	return (void*)0;

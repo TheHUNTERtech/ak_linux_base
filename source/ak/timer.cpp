@@ -12,6 +12,7 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <queue>
 
 #include "ak.h"
 #include "ak_dbg.h"
@@ -61,109 +62,68 @@ static timer_t timer_id_1ms;
 static uint32_t timer_service_remove_node(uint32_t dst, uint32_t sig);
 
 /* timer stick counter */
-static pthread_mutex_t mt_timer_stick_counter;
 static volatile uint32_t timer_stick_counter;
 
-void timer_handler(int sig, siginfo_t *si, void *uc) {
-	(void)si;
-	(void)uc;
+void timer_handler(sigval_t) {
+	timer_stick_counter++;
 
-	if (sig == TIMER_1MS_SIG) {
+	pthread_mutex_lock(&mt_timer_service);
 
-		pthread_mutex_lock(&mt_timer_stick_counter);
-		timer_stick_counter++;
-		pthread_mutex_unlock(&mt_timer_stick_counter);
+	timer_msg_t* remove_node_mask = NULL;
+	timer_msg_t* timer_node_temp = timer_service.tail;
 
-		pthread_mutex_lock(&mt_timer_service);
+	while (timer_node_temp != NULL) {
+		timer_node_temp->data.counter--;
+		if (timer_node_temp->data.counter <= 0) {
 
-		timer_msg_t* remove_node_mask = NULL;
-		timer_msg_t* timer_node_temp = timer_service.tail;
+			task_post_pure_msg(AK_TASK_TIMER_ID, timer_node_temp->data.des_task_id, timer_node_temp->data.sig);
+			AK_TIMER_DBG("[TIMER][timer_handler] des_task_id:%d sig:%d\n", s_msg->header->des_task_id, s_msg->header->sig);
 
-		while (timer_node_temp != NULL) {
-			timer_node_temp->data.counter--;
-			if (timer_node_temp->data.counter <= 0) {
-
-				/* post message to task */
-				ak_msg_t* s_msg = get_pure_msg();
-				set_msg_src_task_id(s_msg, AK_TASK_TIMER_ID);
-				set_msg_sig(s_msg, timer_node_temp->data.sig);
-				task_post(timer_node_temp->data.des_task_id, s_msg);
-
-				AK_TIMER_DBG("[TIMER][timer_handler] des_task_id:%d sig:%d\n", s_msg->header->des_task_id, s_msg->header->sig);
-
-				if (timer_node_temp->data.period != 0) {
-					timer_node_temp->data.counter = timer_node_temp->data.period;
-				}
-				else {
-					remove_node_mask = timer_node_temp;
-				}
+			if (timer_node_temp->data.period != 0) {
+				timer_node_temp->data.counter = timer_node_temp->data.period;
 			}
-
-			/* check next node */
-			timer_node_temp = timer_node_temp->next;
-
-			/* remove node */
-			if (remove_node_mask != NULL) {
-				timer_service_remove_node(remove_node_mask->data.des_task_id, remove_node_mask->data.sig);
-				remove_node_mask = NULL;
+			else {
+				remove_node_mask = timer_node_temp;
 			}
 		}
 
-		pthread_mutex_unlock(&mt_timer_service);
+		/* check next node */
+		timer_node_temp = timer_node_temp->next;
+
+		/* remove node */
+		if (remove_node_mask != NULL) {
+			timer_service_remove_node(remove_node_mask->data.des_task_id, remove_node_mask->data.sig);
+			remove_node_mask = NULL;
+		}
 	}
+
+	pthread_mutex_unlock(&mt_timer_service);
 }
 
 void* timer_entry(void*) {
-	pthread_mutex_lock(&mt_timer_service);
 	timer_service.head = NULL;
 	timer_service.tail = NULL;
-	pthread_mutex_unlock(&mt_timer_service);
 
 	/* configure timer */
 	struct sigevent sev;
 	struct itimerspec its;
-	struct sigaction sa;
-	sigset_t mask;
-
-	/* establish handler for timer signal */
-	sa.sa_flags		= SA_SIGINFO;
-	sa.sa_sigaction	= timer_handler;
-	sigemptyset(&sa.sa_mask);
-	sigaction(TIMER_1MS_SIG, &sa, NULL);
-
-	/* block timer signal temporarily */
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGRTMIN);
-	if (sigprocmask(SIG_SETMASK, &mask, NULL) == -1) {
-		FATAL("TIMER", 0x03);
-	}
 
 	/* create the timer */
-	sev.sigev_notify		= SIGEV_SIGNAL;
-	sev.sigev_signo			= TIMER_1MS_SIG;
-	sev.sigev_value.sival_ptr	= &timer_id_1ms;
+	sev.sigev_notify = SIGEV_THREAD;
+	sev.sigev_signo = TIMER_1MS_SIG;
+	sev.sigev_value.sival_ptr = &timer_id_1ms;
+	sev.sigev_notify_attributes	= NULL;
+	sev.sigev_notify_function = timer_handler;
 	timer_create(CLOCKID, &sev, &timer_id_1ms);
 
-	 /* start the timer */
-	its.it_value.tv_sec		= 0;
-	its.it_value.tv_nsec	= 1000000;				/* timer 1ms */
-	its.it_interval.tv_sec	= its.it_value.tv_sec;
-	its.it_interval.tv_nsec	= its.it_value.tv_nsec;
+	/* start the timer */
+	its.it_value.tv_sec = 0;
+	its.it_value.tv_nsec = 1000000; /* timer 1ms */
+	its.it_interval.tv_sec = its.it_value.tv_sec;
+	its.it_interval.tv_nsec = its.it_value.tv_nsec;
 	timer_settime(timer_id_1ms, 0, &its, NULL);
 
-	sleep(1);
-
-	/* unlock the timer signal, so that timer notification can be delivered */
-	if (sigprocmask(SIG_UNBLOCK, &mask, NULL) == -1) {
-		FATAL("TIMER", 0x04);
-	}
-
-	task_mask_started();
 	wait_all_tasks_started();
-
-	while(1) {
-		usleep(1000000);
-	}
 
 	return (void*)0;
 }
@@ -195,9 +155,6 @@ uint32_t timer_set(uint32_t des_task_id, uint32_t sig, uint32_t duty, timer_type
 	timer_msg_t* timer_new = (timer_msg_t*)malloc(sizeof(timer_msg_t));
 
 	if (timer_new == NULL) {
-
-		pthread_mutex_unlock(&mt_timer_service);
-
 		FATAL("TIMER", 0x02);
 	}
 
@@ -216,7 +173,6 @@ uint32_t timer_set(uint32_t des_task_id, uint32_t sig, uint32_t duty, timer_type
 		break;
 
 	default: {
-		pthread_mutex_unlock(&mt_timer_service);
 		FATAL("TIMER", 0x01);
 	}
 		break;
@@ -294,9 +250,5 @@ uint32_t timer_service_remove_node(uint32_t dst, uint32_t sig) {
 }
 
 uint32_t timer_stick_get() {
-	uint32_t ret;
-	pthread_mutex_lock(&mt_timer_stick_counter);
-	ret = timer_stick_counter;
-	pthread_mutex_unlock(&mt_timer_stick_counter);
-	return ret;
+	return timer_stick_counter;
 }

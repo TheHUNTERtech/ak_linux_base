@@ -17,6 +17,12 @@ using namespace std;
 /* define signal */
 enum {
 	GW_SYS_WATCH_DOG_REPORT_REQ = AK_USER_DEFINE_SIG,
+	GW_SYS_WATCH_DOG_DBG_1,
+	GW_SYS_WATCH_DOG_DBG_2,
+	GW_SYS_WATCH_DOG_DBG_3,
+	GW_SYS_WATCH_DOG_DBG_4,
+	GW_SYS_WATCH_DOG_DBG_5,
+	GW_SYS_WATCH_DOG_DBG_6,
 };
 
 /*****************************************************************************/
@@ -115,6 +121,11 @@ enum {
 	GW_DEBUG_MSG_5,
 	GW_DEBUG_MSG_6,
 	GW_DEBUG_MSG_7,
+	GW_DEBUG_MSG_8,
+	GW_DEBUG_MSG_9,
+	GW_DEBUG_MSG_10,
+	GW_DEBUG_MSG_11,
+	GW_DEBUG_MSG_12,
 };
 
 /*****************************************************************************/
