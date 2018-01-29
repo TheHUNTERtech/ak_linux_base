@@ -20,6 +20,8 @@
 q_msg_t gw_task_debug_msg_mailbox;
 
 void* gw_task_debug_msg_entry(void*) {
+	ak_msg_t* msg = AK_MSG_NULL;
+
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_debug_msg_entry\n");
@@ -34,11 +36,9 @@ void* gw_task_debug_msg_entry(void*) {
 	timer_set(GW_TASK_DEBUG_MSG_ID, GW_DEBUG_MSG_11, 1, TIMER_ONE_SHOT);
 	timer_set(GW_TASK_DEBUG_MSG_ID, GW_DEBUG_MSG_12, 1, TIMER_ONE_SHOT);
 
-	ak_msg_t* msg;
-
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_TASK_DEBUG_MSG_ID);
+		msg = ak_msg_rev(GW_TASK_DEBUG_MSG_ID);
 
 		switch (msg->header->sig) {
 		case GW_DEBUG_MSG_1: {
@@ -187,7 +187,7 @@ void* gw_task_debug_msg_entry(void*) {
 		}
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 
 	return (void*)0;

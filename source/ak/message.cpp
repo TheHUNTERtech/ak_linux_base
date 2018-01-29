@@ -9,11 +9,6 @@
 
 #include "ak_dbg.h"
 #include "message.h"
-#include "trace.h"
-
-static void q_dbg_msg_put(ak_msg_t* msg, uint32_t);
-static void q_dbg_msg_get(ak_msg_t* msg, uint32_t);
-static void q_dbg_msg_free(ak_msg_t* msg, uint32_t);
 
 void q_msg_init(q_msg_t* q_msg) {
 	q_msg->head = NULL;
@@ -24,10 +19,6 @@ void q_msg_init(q_msg_t* q_msg) {
 void q_msg_put(q_msg_t* q_msg, ak_msg_t* msg) {
 
 	pthread_mutex_lock(&(q_msg->mt));
-
-	/* debug */
-	uintptr_t msg_addr = (uintptr_t)msg;
-	q_dbg_msg_put(msg, uint32_t(msg_addr));
 
 	if (q_msg->tail != NULL) {
 		msg->prev = NULL;
@@ -50,6 +41,7 @@ void q_msg_put(q_msg_t* q_msg, ak_msg_t* msg) {
 ak_msg_t* q_msg_get(q_msg_t* q_msg) {
 	ak_msg_t* temp_head;
 	ak_msg_t* msg = NULL;
+
 	pthread_mutex_lock(&(q_msg->mt));
 
 	if (q_msg->head != NULL) {
@@ -68,20 +60,13 @@ ak_msg_t* q_msg_get(q_msg_t* q_msg) {
 
 	q_msg->len --;
 
-	/* debug */
-	uintptr_t msg_addr = (uintptr_t)msg;
-	q_dbg_msg_get(msg, uint32_t(msg_addr));
-
 	pthread_mutex_unlock(&(q_msg->mt));
+
 	return msg;
 }
 
 void q_msg_free(ak_msg_t* msg) {
 	if (msg != NULL) {
-		/* debug */
-		uintptr_t msg_addr = (uintptr_t)msg;
-		q_dbg_msg_free(msg, uint32_t(msg_addr));
-
 		if (msg->header != NULL) {
 			if (msg->header->payload != NULL) {
 				free(msg->header->payload);
@@ -125,19 +110,4 @@ bool q_msg_available(q_msg_t* q_msg) {
 	}
 	pthread_mutex_unlock(&(q_msg->mt));
 	return ret;
-}
-
-void q_dbg_msg_put(ak_msg_t* msg, uint32_t msg_id) {
-	time_t timestamp = (time_t)time(NULL);
-	trace_msg_put(msg, msg_id, timestamp);
-}
-
-void q_dbg_msg_get(ak_msg_t* msg, uint32_t msg_id) {
-	time_t timestamp = (time_t)time(NULL);
-	trace_msg_get(msg, msg_id, timestamp);
-}
-
-void q_dbg_msg_free(ak_msg_t* msg, uint32_t msg_id) {
-	time_t timestamp = (time_t)time(NULL);
-	trace_msg_free(msg, msg_id, timestamp);
 }

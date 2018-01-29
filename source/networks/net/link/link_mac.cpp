@@ -40,7 +40,7 @@ static uint8_t link_mac_frame_cals_checksum(link_mac_frame_t* mac_frame);
 static uint16_t link_mac_frame_cals_datalen(link_mac_frame_t* mac_frame, uint32_t pdu_data_len);
 
 /* mac sending declare */
-#define LINK_MAC_PDU_SENDING_RETRY_COUNTER_MAX	3
+#define LINK_MAC_PDU_SENDING_RETRY_COUNTER_MAX	1
 
 typedef enum {
 	LINK_MAC_SEND_STATE_IDLE,
@@ -90,14 +90,14 @@ void task_link_mac(ak_msg_t* msg) {
 void fsm_link_mac_state_init(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_LINK_MAC_INIT: {
-		APP_DBG_SIG("GW_LINK_MAC_INIT\n");
+		LINK_DBG_SIG("GW_LINK_MAC_INIT\n");
 		/* init lower layer */
 		task_post_pure_msg(GW_LINK_PHY_ID, GW_LINK_PHY_INIT);
 	}
 		break;
 
 	case GW_LINK_MAC_PHY_LAYER_STARTED: {
-		APP_DBG_SIG("GW_LINK_MAC_PHY_LAYER_STARTED\n");
+		LINK_DBG_SIG("GW_LINK_MAC_PHY_LAYER_STARTED\n");
 		/* init mac layer */
 		fifo_init(&link_pdu_id_fifo, link_pdu_id_buf, LINK_PDU_ID_BUF_SIZE, sizeof(uint32_t));
 
@@ -128,7 +128,7 @@ void fsm_link_mac_state_init(ak_msg_t* msg) {
 void fsm_link_mac_state_handle(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_LINK_MAC_FRAME_SEND_REQ: {
-		APP_DBG_SIG("GW_LINK_MAC_FRAME_SEND_REQ\n");
+		LINK_DBG_SIG("GW_LINK_MAC_FRAME_SEND_REQ\n");
 		uint32_t pdu_id;
 		memcpy(&pdu_id, get_data_common_msg(msg), sizeof(uint32_t));
 
@@ -148,7 +148,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_MAC_FRAME_SEND_START: {
-		APP_DBG_SIG("GW_LINK_MAC_FRAME_SEND_START\n");
+		LINK_DBG_SIG("GW_LINK_MAC_FRAME_SEND_START\n");
 		uint32_t pdu_id;
 		memcpy(&pdu_id, get_data_common_msg(msg), sizeof(uint32_t));
 
@@ -179,7 +179,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_MAC_FRAME_SEND_DONE: {
-		APP_DBG_SIG("GW_LINK_MAC_FRAME_SEND_DONE\n");
+		LINK_DBG_SIG("GW_LINK_MAC_FRAME_SEND_DONE\n");
 		timer_remove_attr(GW_LINK_MAC_ID, GW_LINK_MAC_FRAME_SEND_TO);
 		if (link_mac_send_state_get() == LINK_MAC_SEND_STATE_SENDING) {
 			if (++link_mac_frame_send.header.fidx < link_mac_frame_send.header.fnum) {
@@ -201,7 +201,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_MAC_FRAME_SEND_ERR: {
-		APP_DBG_SIG("GW_LINK_MAC_FRAME_SEND_ERR\n");
+		LINK_DBG_SIG("GW_LINK_MAC_FRAME_SEND_ERR\n");
 		timer_remove_attr(GW_LINK_MAC_ID, GW_LINK_MAC_FRAME_SEND_TO);
 		if (link_mac_pdu_sending_retry_counter++ < LINK_MAC_PDU_SENDING_RETRY_COUNTER_MAX) {
 			/* retry sending PDU */
@@ -223,7 +223,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_MAC_FRAME_SEND_TO: {
-		APP_DBG_SIG("GW_LINK_MAC_FRAME_SEND_TO\n");
+		LINK_DBG_SIG("GW_LINK_MAC_FRAME_SEND_TO\n");
 		if (link_mac_pdu_sending_retry_counter++ < LINK_MAC_PDU_SENDING_RETRY_COUNTER_MAX) {
 			/* retry sending PDU */
 			link_mac_frame_send.header.fidx = 0;
@@ -244,7 +244,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_MAC_FRAME_REV: {
-		APP_DBG_SIG("GW_LINK_MAC_FRAME_REV\n");
+		LINK_DBG_SIG("GW_LINK_MAC_FRAME_REV\n");
 		link_mac_frame_t link_mac_frame_rev;
 		memcpy(&link_mac_frame_rev, get_data_common_msg(msg), sizeof(link_mac_frame_t));
 
@@ -285,7 +285,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_MAC_FRAME_REV_TO: {
-		APP_DBG_SIG("GW_LINK_MAC_FRAME_REV_TO\n");
+		LINK_DBG_SIG("GW_LINK_MAC_FRAME_REV_TO\n");
 		if (link_mac_rev_state_get() == LINK_MAC_REV_STATE_RECEIVING) {
 			link_mac_rev_state_set(LINK_MAC_REV_STATE_IDLE);
 			link_pdu_free(link_mac_pdu_receiving->id);
@@ -300,7 +300,7 @@ void fsm_link_mac_state_handle(ak_msg_t* msg) {
 
 void link_mac_send_state_set(link_mac_send_state_e state) {
 	link_mac_send_state = state;
-	APP_DBG("[MAC] link_mac_send_state_set -> %d\n", state);
+	LINK_DBG("[MAC] link_mac_send_state_set -> %d\n", state);
 }
 
 link_mac_send_state_e link_mac_send_state_get() {
@@ -309,7 +309,7 @@ link_mac_send_state_e link_mac_send_state_get() {
 
 void link_mac_rev_state_set(link_mac_rev_state_e state) {
 	link_mac_rev_state = state;
-	APP_DBG("[MAC] link_mac_rev_state_set -> %d\n", state);
+	LINK_DBG("[MAC] link_mac_rev_state_set -> %d\n", state);
 }
 
 link_mac_rev_state_e link_mac_rev_state_get() {
@@ -368,17 +368,17 @@ q_msg_t gw_task_link_mac_mailbox;
 void* gw_task_link_mac_entry(void*) {
 	wait_all_tasks_started();
 
-	APP_DBG("[STARTED] gw_task_link_mac_entry\n");
+	LINK_DBG("[STARTED] gw_task_link_mac_entry\n");
 
 	ak_msg_t* msg;
 
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_LINK_MAC_ID);
+		msg = ak_msg_rev(GW_LINK_MAC_ID);
 
 		task_link_mac(msg);
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 }

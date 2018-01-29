@@ -5,11 +5,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#define __LOG_EN__
-#define SYS_PRINT_EN
-#define SYS_DBG_EN
-#define LOG_TIME_EN
-#define RAW_DBG_EN
+#define __LOG_EN__		1
+#define SYS_PRINT_EN	1
+#define SYS_DBG_EN		1
+#define LOG_TIME_EN		1
+#define RAW_DBG_EN		1
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
@@ -22,29 +22,29 @@
 
 #define __SHORT_FILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#if defined(LOG_TIME_EN)
+#if (LOG_TIME_EN == 1)
 #define __LOG__(fmt, loglevel, ...) \
-	printf("%s%s %s%-5s %s%s %s%s:%s%d %s" fmt, KBLU, sys_dbg_get_time(), KYEL, loglevel, KMAG, __FUNCTION__, KGRN, __SHORT_FILE__, KRED, __LINE__, KNRM, ## __VA_ARGS__)
-#elif defined(__LOG_EN__)
+	printf("%s%s %s%-5s %s%s:%s%d %s" fmt, KBLU, sys_dbg_get_time(), KYEL, loglevel, KGRN, __SHORT_FILE__, KRED, __LINE__, KNRM, ## __VA_ARGS__)
+#elif (__LOG_EN__ == 1)
 #define __LOG__(fmt, loglevel, ...) \
-	printf("%s%-5s %s%s %s%s:%s%d %s" fmt, KYEL, loglevel, KMAG, __FUNCTION__, KGRN, __SHORT_FILE__, KRED, __LINE__, KNRM, ## __VA_ARGS__)
+	printf("%s%-5s %s%s:%s%d %s" fmt, KYEL, loglevel, KGRN, __SHORT_FILE__, KRED, __LINE__, KNRM, ## __VA_ARGS__)
 #else
 #define __LOG__(fmt, loglevel, ...)
 #endif
 
-#if defined(SYS_PRINT_EN)
+#if (SYS_PRINT_EN == 1)
 #define SYS_PRINT(fmt, ...)		__LOG__(fmt, "SYS_PRINT", ##__VA_ARGS__)
 #else
 #define SYS_PRINT(fmt, ...)
 #endif
 
-#if defined(SYS_DBG_EN)
+#if (SYS_DBG_EN == 1)
 #define SYS_DBG(fmt, ...)		__LOG__(fmt, "SYS_DBG", ##__VA_ARGS__)
 #else
 #define SYS_DBG(fmt, ...)
 #endif
 
-#if defined(RAW_DBG_EN)
+#if (RAW_DBG_EN == 1)
 #define RAW_DBG(fmt, ...)		printf(fmt, ##__VA_ARGS__)
 #else
 #define RAW_DBG(fmt, ...)

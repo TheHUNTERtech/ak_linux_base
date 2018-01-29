@@ -10,7 +10,9 @@
 #define LINK_PHY_FRAME_HEADER_SIZE	(sizeof(link_phy_frame_header_t))
 #define LINK_PHY_FRAME_SIZE			(sizeof(link_phy_frame_t))
 
-#define LINK_PHY_MAX_RETRY_SET_DEFAULT	3
+#define LINK_PHY_FRAME_DATA_SIZE	(AK_COMMON_MSG_DATA_SIZE - LINK_PHY_FRAME_HEADER_SIZE)
+
+#define LINK_PHY_MAX_RETRY_SET_DEFAULT	2
 
 typedef struct {
 	uint8_t sof; /* start of frame */

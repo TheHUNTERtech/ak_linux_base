@@ -17,7 +17,6 @@
 #include "ak.h"
 #include "ak_dbg.h"
 #include "message.h"
-#include "trace.h"
 
 #include "sys_dbg.h"
 
@@ -33,53 +32,13 @@ int main() {
 
 	task_init();
 
-	uint8_t ret = trace_msg_init();
-
-	switch (ret) {
-	case RET_TRACE_OK: {
-		AK_PRINT("RET_TRACE_OK\n");
-	}
-		break;
-
-	case RET_TRACE_ERR_INIT_SOCKET: {
-		AK_PRINT("RET_TRACE_ERR_INIT_SOCKET\n");
-	}
-		break;
-
-	case RET_TRACE_ERR_INIT_BIND: {
-		AK_PRINT("RET_TRACE_ERR_INIT_BIND\n");
-	}
-		break;
-
-	case RET_TRACE_ERR_INIT_LISTEN: {
-		AK_PRINT("RET_TRACE_ERR_INIT_LISTEN\n");
-	}
-		break;
-
-	case RET_TRACE_ERR_INIT_HOST_SOCKET: {
-		AK_PRINT("RET_TRACE_ERR_INIT_HOST_SOCKET\n");
-	}
-		break;
-
-	case RET_TRACE_ERR_INIT_HOST_CONNECT: {
-		AK_PRINT("RET_TRACE_ERR_INIT_HOST_CONNECT\n");
-	}
-		break;
-
-	default:
-		break;
-	}
-
-
-	AK_MSG_DBG("TASK LIST LEN: %d\n", ak_thread_table_len);
-
 	for (uint32_t index = 0; index < ak_thread_table_len; index++) {
 		/* init mailbox */
 		q_msg_init(task_list[index].mailbox);
 
 		/* create task */
 		pthread_create(&(task_list[index].pthread), NULL, task_list[index].task, NULL);
-		AK_PRINT("ID:%08x\tCREATE: %s\n",(unsigned int)task_list[index].pthread, task_list[index].info);
+		AK_PRINT("ID:%08x\tCREATE: %s\n",(uint32_t)task_list[index].pthread, task_list[index].info);
 
 		/* create queue trigger */
 		pthread_cond_init(&task_list[index].mailbox_cond, NULL);
@@ -236,7 +195,7 @@ ak_msg_t* ak_memcpy_msg(ak_msg_t* src) {
 	return ret_msg;
 }
 
-void ak_free_msg(ak_msg_t* msg) {
+void ak_msg_free(ak_msg_t* msg) {
 	if (msg != NULL) {
 		q_msg_free(msg);
 	}
@@ -528,7 +487,7 @@ void task_post_dynamic_msg(uint32_t task_dst_id, uint32_t sig, uint8_t* data, ui
 	task_post_dynamic_msg(task_dst_id, task_dst_id, sig, data, len);
 }
 
-ak_msg_t* msg_get(uint32_t des_task_id) {
+ak_msg_t* ak_msg_rev(uint32_t des_task_id) {
 	ak_msg_t* ret_msg = AK_MSG_NULL;
 
 	if (des_task_id >= AK_TASK_LIST_LEN) {
@@ -554,15 +513,6 @@ ak_msg_t* msg_get(uint32_t des_task_id) {
 
 uint32_t get_msg_type(ak_msg_t* msg) {
 	return msg->header->type;
-}
-
-void msg_free(ak_msg_t* msg) {
-	if (msg) {
-		q_msg_free(msg);
-	}
-	else {
-		FATAL("AK", 0x20);
-	}
 }
 
 int get_task_id() {

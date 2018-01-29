@@ -1,6 +1,7 @@
 #ifndef __LINK_MAC_H__
 #define __LINK_MAC_H__
 
+#include "link_phy.h"
 #include "link_config.h"
 
 #define LINK_MAC_FRAME_HEADER_SIZE	(sizeof(link_mac_frame_header_t))

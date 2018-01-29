@@ -154,7 +154,7 @@ void* gw_task_if_rf24_entry(void*) {
 
 		while (msg_available(GW_TASK_IF_RF24_ID)) {
 			/* get messge */
-			ak_msg_t* msg = msg_get(GW_TASK_IF_RF24_ID);
+			ak_msg_t* msg = ak_msg_rev(GW_TASK_IF_RF24_ID);
 
 			/* handler message */
 			switch (msg->header->sig) {
@@ -258,7 +258,7 @@ void* gw_task_if_rf24_entry(void*) {
 			}
 
 			/* free message */
-			msg_free(msg);
+			ak_msg_free(msg);
 		}
 
 		usleep(100);

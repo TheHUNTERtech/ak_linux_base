@@ -274,11 +274,11 @@ void* gw_task_link_entry(void*) {
 
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_LINK_ID);
+		msg = ak_msg_rev(GW_LINK_ID);
 
 		task_link(msg);
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 }

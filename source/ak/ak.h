@@ -100,7 +100,8 @@ extern ak_msg_t* get_dynamic_msg();
 extern ak_msg_t* get_common_msg();
 extern uint32_t get_msg_type(ak_msg_t* msg);
 extern ak_msg_t* ak_memcpy_msg(ak_msg_t* src);
-extern void ak_free_msg(ak_msg_t* msg);
+extern void ak_msg_free(ak_msg_t* msg);
+extern ak_msg_t* ak_msg_rev(uint32_t des_task_id);
 
 extern void set_msg_sig(ak_msg_t* msg, uint32_t sig);
 extern void set_msg_des_task_id(ak_msg_t* msg, uint32_t des_task_id);
@@ -130,9 +131,6 @@ extern void task_post_common_msg(uint32_t task_src_id, uint32_t task_dst_id, uin
 extern void task_post_common_msg(uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len);
 extern void task_post_dynamic_msg(uint32_t task_src_id, uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len);
 extern void task_post_dynamic_msg(uint32_t task_dst_id, uint32_t sig, uint8_t* data, uint32_t len);
-
-extern ak_msg_t* msg_get(uint32_t des_task_id);
-extern void msg_free(ak_msg_t* msg);
 
 /******************************************************************************
 * task function

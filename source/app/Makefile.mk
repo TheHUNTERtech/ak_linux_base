@@ -19,6 +19,5 @@ OBJ += $(OBJ_DIR)/task_debug_msg.o
 OBJ += $(OBJ_DIR)/task_sm.o
 OBJ += $(OBJ_DIR)/task_sensor.o
 OBJ += $(OBJ_DIR)/task_sys.o
-OBJ += $(OBJ_DIR)/task_log.o
 OBJ += $(OBJ_DIR)/task_pub_sub.o
 OBJ += $(OBJ_DIR)/task_fw.o

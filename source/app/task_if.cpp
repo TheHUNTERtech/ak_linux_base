@@ -47,7 +47,7 @@ void* gw_task_if_entry(void*) {
 
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_TASK_IF_ID);
+		msg = ak_msg_rev(GW_TASK_IF_ID);
 
 		/* handler message */
 		if (msg->header->if_des_type == IF_TYPE_RF24_GW ||
@@ -74,7 +74,7 @@ void* gw_task_if_entry(void*) {
 		}
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 
 	return (void*)0;

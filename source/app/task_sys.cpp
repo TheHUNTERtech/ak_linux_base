@@ -26,7 +26,7 @@ void* gw_task_sys_entry(void*) {
 
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_TASK_SYS_ID);
+		msg = ak_msg_rev(GW_TASK_SYS_ID);
 
 		switch (msg->header->sig) {
 
@@ -79,7 +79,7 @@ void* gw_task_sys_entry(void*) {
 		}
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 
 	return (void*)0;

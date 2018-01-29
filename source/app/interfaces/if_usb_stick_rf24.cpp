@@ -67,6 +67,8 @@ int usb_stick_rf24_tx_frame_post(uint8_t* data, uint8_t len);
 static uint8_t tx_buffer[1024];
 
 void* gw_task_if_usb_stick_rf24_entry(void*) {
+	ak_msg_t* msg = AK_MSG_NULL;
+
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_if_usb_stick_rf24_entry\n");
@@ -79,11 +81,9 @@ void* gw_task_if_usb_stick_rf24_entry(void*) {
 		pthread_create(&if_usb_stick_rf24_rx_thread, NULL, if_usb_stick_rf24_rx_thread_handler, NULL);
 	}
 
-	ak_msg_t* msg;
-
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_TASK_IF_USB_STICK_RF24_ID);
+		msg = ak_msg_rev(GW_TASK_IF_USB_STICK_RF24_ID);
 
 		switch (get_msg_type(msg)) {
 		case PURE_MSG_TYPE: {
@@ -150,7 +150,7 @@ void* gw_task_if_usb_stick_rf24_entry(void*) {
 		}
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 
 	return (void*)0;

@@ -23,7 +23,7 @@ static void link_pdu_fatal(const char* s, uint8_t c);
 
 /* link pdu function */
 void link_pdu_init() {
-	SYS_DBG("[LINK_DATA] link_pdu_init(%d)\n", LINK_PDU_POOL_SIZE);
+	LINK_DBG_DATA("[LINK_DATA] link_pdu_init(%d)\n", LINK_PDU_POOL_SIZE);
 	pthread_mutex_lock(&mt_link_pdu_pool);
 	free_link_pdu_pool = (link_pdu_t*)link_pdu_pool;
 	for (uint32_t i = 0; i < LINK_PDU_POOL_SIZE; i++) {
@@ -51,12 +51,12 @@ link_pdu_t* link_pdu_malloc() {
 		free_link_pdu_pool = free_link_pdu_pool->next;
 	}
 	pthread_mutex_unlock(&mt_link_pdu_pool);
-	SYS_DBG("[LINK_DATA] link_pdu_malloc(%d)\n", allocate_msg->id);
+	LINK_DBG_DATA("[LINK_DATA] link_pdu_malloc(%d)\n", allocate_msg->id);
 	return allocate_msg;
 }
 
 void link_pdu_free(link_pdu_t* link_pdu) {
-	SYS_DBG("[LINK_DATA] link_pdu_free(%d)\n", link_pdu->id);
+	LINK_DBG_DATA("[LINK_DATA] link_pdu_free(%d)\n", link_pdu->id);
 	pthread_mutex_lock(&mt_link_pdu_pool);
 	if ((link_pdu != LINK_PDU_NULL) && \
 			(link_pdu->id < LINK_PDU_POOL_SIZE) && \
@@ -72,7 +72,7 @@ void link_pdu_free(link_pdu_t* link_pdu) {
 }
 
 link_pdu_t* link_pdu_get(uint32_t pdu_id) {
-	SYS_DBG("[LINK_DATA] link_pdu_get(%d)\n", pdu_id);
+	LINK_DBG_DATA("[LINK_DATA] link_pdu_get(%d)\n", pdu_id);
 	link_pdu_t* link_pdu = LINK_PDU_NULL;
 	pthread_mutex_lock(&mt_link_pdu_pool);
 	if ((pdu_id < LINK_PDU_POOL_SIZE) && \
@@ -87,7 +87,7 @@ link_pdu_t* link_pdu_get(uint32_t pdu_id) {
 }
 
 void link_pdu_free(uint32_t pdu_id) {
-	SYS_DBG("[LINK_DATA] link_pdu_free(%d)\n", pdu_id);
+	LINK_DBG_DATA("[LINK_DATA] link_pdu_free(%d)\n", pdu_id);
 	pthread_mutex_lock(&mt_link_pdu_pool);
 	if (pdu_id < LINK_PDU_POOL_SIZE && link_pdu_pool[pdu_id].is_used) {
 		link_pdu_pool[pdu_id].is_used = 0;
@@ -102,7 +102,7 @@ void link_pdu_free(uint32_t pdu_id) {
 
 /* link address utilities */
 void link_set_src_addr(uint32_t addr) {
-	SYS_DBG("[LINK_DATA] link_set_src_addr(%d)\n", addr);
+	LINK_DBG_DATA("[LINK_DATA] link_set_src_addr(%d)\n", addr);
 	pthread_mutex_lock(&mt_link_addr);
 	mac_src_add = addr;
 	pthread_mutex_unlock(&mt_link_addr);
@@ -117,7 +117,7 @@ uint32_t link_get_src_addr() {
 }
 
 void link_set_des_addr(uint32_t addr) {
-	SYS_DBG("[LINK_DATA] link_set_des_addr(%d)\n", addr);
+	LINK_DBG_DATA("[LINK_DATA] link_set_des_addr(%d)\n", addr);
 	pthread_mutex_lock(&mt_link_addr);
 	mac_des_add = addr;
 	pthread_mutex_unlock(&mt_link_addr);

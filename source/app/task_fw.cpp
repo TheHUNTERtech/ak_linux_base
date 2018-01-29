@@ -61,6 +61,8 @@ static void fw_device_internal_update_started();
 static void fw_update_completed();
 
 void* gw_task_fw_entry(void*) {
+	ak_msg_t* msg = AK_MSG_NULL;
+
 	string firmware_binary_path = static_cast<string>(APP_ROOT_PATH_DISK) + static_cast<string>("/dev_firmware");
 
 	struct stat st = {0};
@@ -72,11 +74,9 @@ void* gw_task_fw_entry(void*) {
 
 	APP_DBG("[STARTED] gw_task_fw_entry\n");
 
-	ak_msg_t* msg;
-
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_TASK_FW_ID);
+		msg = ak_msg_rev(GW_TASK_FW_ID);
 
 		/* handler message */
 		switch (msg->header->sig) {
@@ -318,7 +318,7 @@ void* gw_task_fw_entry(void*) {
 			break;
 		}
 
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 
 	return (void*)0;

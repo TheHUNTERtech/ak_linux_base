@@ -18,15 +18,15 @@
 q_msg_t gw_task_pub_sub_mailbox;
 
 void* gw_task_pub_sub_entry(void*) {
+	ak_msg_t* msg = AK_MSG_NULL;
+
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_pub_sub_entry\n");
 
-	ak_msg_t* msg;
-
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_TASK_PUB_SUB_ID);
+		msg = ak_msg_rev(GW_TASK_PUB_SUB_ID);
 
 		switch (msg->header->sig) {
 
@@ -35,7 +35,7 @@ void* gw_task_pub_sub_entry(void*) {
 		}
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 
 	return (void*)0;

@@ -38,6 +38,8 @@ static int send_message_to_app(uint32_t if_des_type, uint8_t* data, uint32_t len
 static char* get_if_socket_path(uint32_t id);
 
 void* gw_task_if_app_entry(void*) {
+	ak_msg_t* msg = AK_MSG_NULL;
+
 	struct sockaddr_un addr;
 
 	/* create gateway server socket */
@@ -70,11 +72,9 @@ void* gw_task_if_app_entry(void*) {
 
 	pthread_create(&app_rev_thread_id, NULL, app_rev_thread_entry, NULL);
 
-	ak_msg_t* msg;
-
 	while (1) {
 
-		msg = msg_get(GW_TASK_IF_APP_ID);
+		msg = ak_msg_rev(GW_TASK_IF_APP_ID);
 
 		if (is_if_app_id_existed(msg->header->if_des_type)) {
 			switch (get_msg_type(msg)) {
@@ -122,7 +122,7 @@ void* gw_task_if_app_entry(void*) {
 		}
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 
 	return (void*)0;

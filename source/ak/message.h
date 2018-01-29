@@ -20,30 +20,20 @@
 #define MAX_MSG_REF_COUNT				10
 
 typedef struct {
-	/* time of message handler */
-	uint32_t	start_post;
-	uint32_t	start_exe;
-	uint32_t	stop_exe;
-} dbg_handler_t;
-
-typedef struct {
-	/* debug */
-	dbg_handler_t dbg_handler;
+	/* message type */
+	uint32_t type;
 
 	/* task header */
 	uint32_t src_task_id;
 	uint32_t des_task_id;
 	uint32_t sig;
 
-	/* external task header */
+	/* interface task header */
 	uint32_t if_src_task_id;
 	uint32_t if_des_task_id;
 	uint32_t if_src_type;
 	uint32_t if_des_type;
 	uint32_t if_sig;
-
-	/* message type (pool type)*/
-	uint32_t type;
 
 	/* payload */
 	uint32_t len;

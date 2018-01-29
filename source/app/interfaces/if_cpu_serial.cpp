@@ -30,15 +30,15 @@
 q_msg_t gw_task_if_cpu_serial_mailbox;
 
 void* gw_task_if_cpu_serial_entry(void*) {
+	ak_msg_t* msg = AK_MSG_NULL;
+
 	wait_all_tasks_started();
 
 	APP_DBG("[STARTED] gw_task_if_cpu_serial_entry\n");
 
-	ak_msg_t* msg;
-
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_TASK_IF_CPU_SERIAL_ID);
+		msg = ak_msg_rev(GW_TASK_IF_CPU_SERIAL_ID);
 
 		switch (msg->header->sig) {
 		case GW_CPU_SERIAL_IF_PURE_MSG_OUT: {
@@ -88,7 +88,7 @@ void* gw_task_if_cpu_serial_entry(void*) {
 		}
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 
 	return (void*)0;

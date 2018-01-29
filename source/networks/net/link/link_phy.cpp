@@ -122,33 +122,33 @@ static bool comport_is_opened = false;
 
 void* gw_task_link_phy_entry(void*) {
 	if (link_phy_open_dev(LINK_PHY_DEV_PATH) < 0) {
-		APP_DBG("Cannot open %s !\n", LINK_PHY_DEV_PATH);
+		LINK_DBG("Cannot open %s !\n", LINK_PHY_DEV_PATH);
 	}
 	else {
-		APP_DBG("Opened %s success !\n", LINK_PHY_DEV_PATH);
+		LINK_DBG("Opened %s success !\n", LINK_PHY_DEV_PATH);
 		comport_is_opened = true;
 		pthread_create(&link_phy_rx_thread, NULL, link_phy_rx_thread_handler, NULL);
 	}
 
 	wait_all_tasks_started();
 
-	APP_DBG("[STARTED] gw_task_link_phy_entry\n");
+	LINK_DBG("[STARTED] gw_task_link_phy_entry\n");
 
 	ak_msg_t* msg;
 
 	while (1) {
 		/* get messge */
-		msg = msg_get(GW_LINK_PHY_ID);
+		msg = ak_msg_rev(GW_LINK_PHY_ID);
 
 		fsm_dispatch(&fsm_link_phy, msg);
 
 		/* free message */
-		msg_free(msg);
+		ak_msg_free(msg);
 	}
 }
 
 void* link_phy_rx_thread_handler(void*) {
-	APP_DBG("link_phy_rx_thread_handler entry successed!\n");
+	LINK_DBG("link_phy_rx_thread_handler entry successed!\n");
 	uint8_t rx_buffer[LINK_PHY_RX_THREAD_BUFFER_SIZE];
 	uint32_t rx_read_len;
 
@@ -164,7 +164,7 @@ void* link_phy_rx_thread_handler(void*) {
 
 int link_phy_open_dev(const char* devpath) {
 	struct termios options;
-	APP_DBG("[LINK_PHY][link_phy_open_dev] devpath: %s\n", devpath);
+	LINK_DBG("[LINK_PHY][link_phy_open_dev] devpath: %s\n", devpath);
 
 	link_phy_fd = open(devpath, O_RDWR | O_NOCTTY | O_NDELAY);
 	if (link_phy_fd < 0) {
@@ -262,7 +262,7 @@ uint8_t link_phy_frame_cals_checksum(link_phy_frame_t* phy_frame) {
 void fsm_link_phy_state_init(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_LINK_PHY_INIT: {
-		APP_DBG_SIG("GW_LINK_PHY_INIT\n");
+		LINK_DBG_SIG("GW_LINK_PHY_INIT\n");
 
 		/* private object init */
 		link_phy_send_state_set(LINK_PHY_SEND_STATE_IDLE);
@@ -292,7 +292,7 @@ void fsm_link_phy_state_init(ak_msg_t* msg) {
 void fsm_link_phy_state_handle(ak_msg_t* msg) {
 	switch (msg->header->sig) {
 	case GW_LINK_PHY_FRAME_SEND_REQ: {
-		APP_DBG_SIG("GW_LINK_PHY_FRAME_SEND_REQ\n");
+		LINK_DBG_SIG("GW_LINK_PHY_FRAME_SEND_REQ\n");
 		if (link_phy_send_state_get() == LINK_PHY_SEND_STATE_IDLE) {
 			/* sending frame packed */
 			send_link_phy_frame.header.type = (uint8_t)PHY_FRAME_TYPE_REQ;
@@ -318,7 +318,7 @@ void fsm_link_phy_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_PHY_FRAME_SEND_TO: {
-		APP_DBG_SIG("GW_LINK_PHY_FRAME_SEND_TO\n");
+		LINK_DBG_SIG("GW_LINK_PHY_FRAME_SEND_TO\n");
 		if (retry_counter_send++ >= link_phy_max_retry_val) {
 			link_phy_frame_send_max_retry();
 		}
@@ -329,35 +329,34 @@ void fsm_link_phy_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_PHY_FRAME_REV: {
-		APP_DBG_SIG("GW_LINK_PHY_FRAME_REV\n");
-		link_phy_frame_t link_frame_rev;
-		get_data_dynamic_msg(msg, (uint8_t*)&link_frame_rev, sizeof(link_phy_frame_t));
+		LINK_DBG_SIG("GW_LINK_PHY_FRAME_REV\n");
+		link_phy_frame_t* link_frame_rev = (link_phy_frame_t*)get_data_common_msg(msg);
 
-		switch (link_frame_rev.header.type) {
+		switch (link_frame_rev->header.type) {
 		case PHY_FRAME_TYPE_REQ: {
-			if (link_phy_rev_seq_num != link_frame_rev.header.seq_num) {
-				link_phy_rev_seq_num = link_frame_rev.header.seq_num;
+			if (link_phy_rev_seq_num != link_frame_rev->header.seq_num) {
+				link_phy_rev_seq_num = link_frame_rev->header.seq_num;
 			}
 
 			/* respond ack */
 			link_phy_frame_t link_phy_frame_ack;
 			link_phy_frame_ack.header.sof = LINK_PHY_SOF;
-			link_phy_frame_ack.header.des_addr = link_frame_rev.header.src_addr;
-			link_phy_frame_ack.header.src_addr = link_frame_rev.header.des_addr;
+			link_phy_frame_ack.header.des_addr = link_frame_rev->header.src_addr;
+			link_phy_frame_ack.header.src_addr = link_frame_rev->header.des_addr;
 			link_phy_frame_ack.header.type = PHY_FRAME_TYPE_ACK;
 			link_phy_frame_ack.header.sub_type = 0;
-			link_phy_frame_ack.header.seq_num = link_frame_rev.header.seq_num;
+			link_phy_frame_ack.header.seq_num = link_frame_rev->header.seq_num;
 			link_phy_frame_ack.header.len = 0;
 			link_phy_frame_ack.header.fcs = link_phy_frame_cals_checksum((link_phy_frame_t*)&link_phy_frame_ack);
 			link_phy_frame_write(&link_phy_frame_ack);
 
-			task_post_common_msg(GW_LINK_MAC_ID, GW_LINK_MAC_FRAME_REV, (uint8_t*)link_frame_rev.data, link_frame_rev.header.len);
+			task_post_common_msg(GW_LINK_MAC_ID, GW_LINK_MAC_FRAME_REV, (uint8_t*)link_frame_rev->data, link_frame_rev->header.len);
 		}
 			break;
 
 		case PHY_FRAME_TYPE_ACK: {
 			if (link_phy_send_state_get() == LINK_PHY_SEND_STATE_SENDING) {
-				if (link_phy_send_seq_num == link_frame_rev.header.seq_num) {
+				if (link_phy_send_seq_num == link_frame_rev->header.seq_num) {
 					timer_remove_attr(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_SEND_TO);
 					link_phy_send_state_set(LINK_PHY_SEND_STATE_IDLE);
 					task_post_pure_msg(GW_LINK_MAC_ID, GW_LINK_MAC_FRAME_SEND_DONE);
@@ -368,7 +367,7 @@ void fsm_link_phy_state_handle(ak_msg_t* msg) {
 
 		case PHY_FRAME_TYPE_NACK: {
 			if (link_phy_send_state_get() == LINK_PHY_SEND_STATE_SENDING) {
-				if (link_phy_send_seq_num == link_frame_rev.header.seq_num) {
+				if (link_phy_send_seq_num == link_frame_rev->header.seq_num) {
 					timer_remove_attr(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_SEND_TO);
 
 					if (retry_counter_send++ > link_phy_max_retry_val) {
@@ -389,18 +388,17 @@ void fsm_link_phy_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_PHY_FRAME_REV_CS_ERR: {
-		APP_DBG_SIG("GW_LINK_PHY_FRAME_REV_CS_ERR\n");
-		link_phy_frame_t link_frame_rev;
-		get_data_dynamic_msg(msg, (uint8_t*)&link_frame_rev, sizeof(link_phy_frame_t));
+		LINK_DBG_SIG("GW_LINK_PHY_FRAME_REV_CS_ERR\n");
+		link_phy_frame_t* link_frame_rev = (link_phy_frame_t*)get_data_common_msg(msg);
 
 		/* respond non-ack */
 		link_phy_frame_t link_phy_frame_non_ack;
 		link_phy_frame_non_ack.header.sof = LINK_PHY_SOF;
-		link_phy_frame_non_ack.header.des_addr = link_frame_rev.header.src_addr;
-		link_phy_frame_non_ack.header.src_addr = link_frame_rev.header.des_addr;
+		link_phy_frame_non_ack.header.des_addr = link_frame_rev->header.src_addr;
+		link_phy_frame_non_ack.header.src_addr = link_frame_rev->header.des_addr;
 		link_phy_frame_non_ack.header.type = PHY_FRAME_TYPE_NACK;
 		link_phy_frame_non_ack.header.sub_type = 0;
-		link_phy_frame_non_ack.header.seq_num = link_frame_rev.header.seq_num;
+		link_phy_frame_non_ack.header.seq_num = link_frame_rev->header.seq_num;
 		link_phy_frame_non_ack.header.len = 0;
 		link_phy_frame_non_ack.header.fcs = link_phy_frame_cals_checksum((link_phy_frame_t*)&link_phy_frame_non_ack);
 		link_phy_frame_write(&link_phy_frame_non_ack);
@@ -408,7 +406,7 @@ void fsm_link_phy_state_handle(ak_msg_t* msg) {
 		break;
 
 	case GW_LINK_PHY_FRAME_REV_TO: {
-		APP_DBG_SIG("GW_LINK_PHY_FRAME_REV_TO\n");
+		LINK_DBG_SIG("GW_LINK_PHY_FRAME_REV_TO\n");
 		link_phy_frame_parser_state_revc_set(PARSER_STATE_SOF);
 	}
 		break;
@@ -520,11 +518,11 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 			uint8_t cals_cs = link_phy_frame_cals_checksum(&rev_link_phy_frame);
 
 			if (cals_cs == rev_link_phy_frame.header.fcs) {
-				task_post_dynamic_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
+				task_post_common_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
 			}
 			else {
-				APP_DBG("checksum incorrectly !\n");
-				task_post_dynamic_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_CS_ERR, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
+				LINK_DBG("checksum incorrectly !\n");
+				task_post_common_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_CS_ERR, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
 			}
 
 			link_phy_frame_parser_state_revc_set(PARSER_STATE_SOF);
@@ -541,11 +539,11 @@ uint8_t gw_link_phy_frame_rev_byte(uint8_t c) {
 			uint8_t cals_cs = link_phy_frame_cals_checksum(&rev_link_phy_frame);
 
 			if (cals_cs == rev_link_phy_frame.header.fcs) {
-				task_post_dynamic_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
+				task_post_common_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
 			}
 			else {
-				APP_DBG("checksum incorrectly !\n");
-				task_post_dynamic_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_CS_ERR, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
+				LINK_DBG("checksum incorrectly !\n");
+				task_post_common_msg(GW_LINK_PHY_ID, GW_LINK_PHY_FRAME_REV_CS_ERR, (uint8_t*)&rev_link_phy_frame, sizeof(link_phy_frame_t));
 			}
 
 			link_phy_frame_parser_state_revc_set(PARSER_STATE_SOF);
