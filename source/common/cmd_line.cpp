@@ -19,7 +19,7 @@ uint8_t cmd_line_parser(cmd_line_t* cmd_table, uint8_t* command){
 	}
 
 	/* get cmd */
-	while(*p_command) {
+	while (*p_command) {
 		if (*p_command == ' ' || *p_command == '\r' || *p_command == '\n') {
 			cmd[cmd_index] = 0;
 			break;
