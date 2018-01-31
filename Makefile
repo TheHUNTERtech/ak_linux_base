@@ -9,7 +9,7 @@ CXX		= g++
 CC		= gcc
 OBJ_DIR		= build_$(NAME_MODULE)
 
-OPTIMIZE_OPTION	=	-g -Os
+OPTIMIZE_OPTION	=	-g -O3
 WARNNING_OPTION	+=	-Werror -W -Wno-missing-field-initializers
 
 -include source/ak/Makefile.mk

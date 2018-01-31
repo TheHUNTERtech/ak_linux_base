@@ -13,8 +13,6 @@ extern "C"
 #define RET_FIFO_OK				(0x01)
 #define RET_FIFO_NG				(0x00)
 
-typedef void (*memcpy_f)(void *dst,const void *str, size_t size);
-
 typedef struct {
 	uint32_t tail_index;
 	uint32_t head_index;
@@ -28,8 +26,8 @@ extern void		fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_
 extern uint32_t	fifo_availble(fifo_t* fifo);
 extern bool		fifo_is_empty(fifo_t* fifo);
 extern bool		fifo_is_full(fifo_t* fifo);
-extern uint32_t	fifo_put(fifo_t* fifo, void* data);
-extern uint32_t	fifo_get(fifo_t* fifo, void* data);
+extern uint8_t	fifo_put(fifo_t* fifo, void* data);
+extern uint8_t	fifo_get(fifo_t* fifo, void* data);
 
 #ifdef __cplusplus
 }

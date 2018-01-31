@@ -1,14 +1,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "fifo.h"
 #include "sys_dbg.h"
 
-void fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size) {
-	if (fifo == NULL || buffer == NULL) {
-		FATAL("FIFO", 0x01);
-	}
+#include "fifo.h"
 
+void fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size) {
 	fifo->tail_index = 0;
 	fifo->head_index = 0;
 	fifo->fill_size = 0;
@@ -30,14 +27,11 @@ bool fifo_is_full(fifo_t* fifo) {
 	return (fifo->fill_size == fifo->buffer_size) ? true : false;
 }
 
-uint32_t fifo_put(fifo_t* fifo, void* data) {
+uint8_t fifo_put(fifo_t* fifo, void* data) {
 	uint32_t next_tail_index;
-
-	SYS_DBG("[fifo_put]\n");
 
 	if (fifo->fill_size == fifo->buffer_size) {
 		FATAL("FIFO", 0x02);
-		return RET_FIFO_NG;
 	}
 
 	if (data != NULL) {
@@ -55,14 +49,11 @@ uint32_t fifo_put(fifo_t* fifo, void* data) {
 	return RET_FIFO_OK;
 }
 
-uint32_t fifo_get(fifo_t* fifo, void* data) {
+uint8_t fifo_get(fifo_t* fifo, void* data) {
 	uint32_t next_head_index;
-
-	SYS_DBG("[fifo_get]\n");
 
 	if (fifo_is_empty(fifo)) {
 		FATAL("FIFO", 0x03);
-		return RET_FIFO_NG;
 	}
 
 	if (data != NULL) {
