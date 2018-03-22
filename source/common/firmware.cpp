@@ -23,7 +23,7 @@ int firmware_get_info(firmware_header_t* fh, const char* bin_file_path) {
 
 	fstat(binary_file, &file_info);
 
-	for (index = 0; index < file_info.st_size; index += sizeof(uint32_t)) {
+	for (index = 0; index < static_cast<int>((file_info.st_size / sizeof(uint32_t)) * sizeof(uint32_t)); index += sizeof(uint32_t)) {
 		temp_data = 0;
 		ssize = pread(binary_file, &temp_data, sizeof(uint32_t), index);
 		check_sum += temp_data;

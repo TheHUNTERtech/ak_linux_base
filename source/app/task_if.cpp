@@ -15,7 +15,6 @@
 
 #include "task_list.h"
 #include "task_list_if.h"
-#include "task_snmp.h"
 #include "if_rf24.h"
 
 #include "task_if.h"

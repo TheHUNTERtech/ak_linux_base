@@ -14,14 +14,10 @@
 #include "if_usb_stick_rf24.h"
 
 #include "task_console.h"
-#include "task_snmp.h"
-#include "task_cloud.h"
 #include "task_if.h"
 #include "task_debug_msg.h"
-#include "task_sm.h"
 #include "task_sensor.h"
 #include "task_sys.h"
-#include "task_pub_sub.h"
 #include "task_fw.h"
 
 #include "link_phy.h"
@@ -40,16 +36,12 @@ enum {
 	/* APP TASKS */
 	GW_TASK_IF_CONSOLE_ID,
 	GW_TASK_CONSOLE_ID,
-	GW_TASK_SNMP_ID,
-	GW_TASK_CLOUD_ID,
 	GW_TASK_IF_ID,
 	GW_TASK_DEBUG_MSG_ID,
 	GW_TASK_IF_APP_ID,
 	GW_TASK_IF_CPU_SERIAL_ID,
-	GW_TASK_SM_ID,
 	GW_TASK_SENSOR_ID,
 	GW_TASK_SYS_ID,
-	GW_TASK_PUB_SUB_ID,
 	GW_TASK_FW_ID,
 	GW_TASK_IF_USB_STICK_RF24_ID,
 
